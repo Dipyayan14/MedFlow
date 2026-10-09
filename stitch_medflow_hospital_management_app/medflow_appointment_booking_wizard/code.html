@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MedFlow - Book OPD Appointment</title>
+<!-- Google Fonts & Material Symbols -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "inverse-surface": "#2d3133",
+            "secondary-fixed-dim": "#4edea3",
+            "inverse-on-surface": "#eff1f3",
+            "on-tertiary": "#ffffff",
+            "primary": "#006574",
+            "on-background": "#191c1e",
+            "secondary": "#006c49",
+            "surface-container-lowest": "#ffffff",
+            "on-tertiary-fixed": "#0d1c2e",
+            "on-primary-fixed": "#001f25",
+            "error-container": "#ffdad6",
+            "primary-fixed": "#a4eeff",
+            "tertiary": "#4f5d71",
+            "surface": "#f7f9fb",
+            "on-primary-fixed-variant": "#004e5a",
+            "surface-variant": "#e0e3e5",
+            "on-primary": "#ffffff",
+            "tertiary-fixed": "#d5e3fc",
+            "on-tertiary-fixed-variant": "#3a485b",
+            "on-primary-container": "#f8fdff",
+            "tertiary-fixed-dim": "#b9c7df",
+            "primary-fixed-dim": "#7ed3e5",
+            "on-tertiary-container": "#fdfcff",
+            "on-error-container": "#93000a",
+            "on-surface": "#191c1e",
+            "outline": "#6e797c",
+            "on-secondary-fixed": "#002113",
+            "on-error": "#ffffff",
+            "on-secondary-fixed-variant": "#005236",
+            "error": "#ba1a1a",
+            "inverse-primary": "#7ed3e5",
+            "secondary-container": "#6cf8bb",
+            "background": "#f7f9fb",
+            "surface-dim": "#d8dadc",
+            "surface-container-highest": "#e0e3e5",
+            "tertiary-container": "#67758b",
+            "surface-container-high": "#e6e8ea",
+            "outline-variant": "#bec8cb",
+            "surface-bright": "#f7f9fb",
+            "on-secondary-container": "#00714d",
+            "surface-container-low": "#f2f4f6",
+            "surface-tint": "#006877",
+            "on-surface-variant": "#3e484b",
+            "secondary-fixed": "#6ffbbe",
+            "surface-container": "#eceef0",
+            "primary-container": "#1c8090",
+            "on-secondary": "#ffffff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-md": "1rem",
+            "space-xl": "2rem",
+            "gutter": "1rem",
+            "space-sm": "0.5rem",
+            "margin": "1rem",
+            "space-xs": "0.25rem",
+            "space-lg": "1.25rem"
+          },
+          "fontFamily": {
+            "label-md": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-lg-mobile": ["Plus Jakarta Sans"],
+            "label-lg": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "headline-lg-mobile": ["26px", { "lineHeight": "34px", "fontWeight": "700" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "700" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-family: 'Material Symbols Outlined';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 20px;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-feature-settings: 'liga';
+      -webkit-font-smoothing: antialiased;
+    }
+    @keyframes pulse-ring {
+      0% { box-shadow: 0 0 0 0 rgba(0, 101, 116, 0.4); }
+      70% { box-shadow: 0 0 0 6px rgba(0, 101, 116, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(0, 101, 116, 0); }
+    }
+    .slot-glow-active {
+      animation: pulse-ring 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex justify-center selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- Mobile Screen Shell Container (Max Width 440px for mobile clinical workflow) -->
+<div class="w-full max-w-[440px] bg-surface flex flex-col min-h-screen shadow-xl relative pb-36">
+<!-- Top Navigation Bar (Shared Component Pattern) -->
+<header class="sticky top-0 z-30 bg-surface-container-lowest shadow-sm">
+<div class="flex justify-between items-center px-space-md py-space-sm">
+<div class="flex items-center gap-space-sm">
+<button aria-label="Go back" class="p-1 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<div>
+<span class="text-label-sm font-label-sm uppercase tracking-wider text-primary">OPD Portal</span>
+<h1 class="text-headline-sm font-headline-sm text-on-surface tracking-tight">Book OPD Appointment</h1>
+</div>
+</div>
+<div class="flex items-center gap-space-xs">
+<button aria-label="Hospital emergency" class="w-9 h-9 flex items-center justify-center rounded-full text-primary hover:bg-surface-container-high transition-all">
+<span class="material-symbols-outlined" data-icon="emergency">emergency</span>
+</button>
+</div>
+</div>
+<!-- 3-Step Wizard Progress Indicator -->
+<div class="px-space-md pt-1 pb-3 bg-surface-container-lowest border-b border-surface-container">
+<div class="flex items-center justify-between relative">
+<!-- Step 1: Completed -->
+<div class="flex flex-col items-center z-10">
+<div class="w-6 h-6 rounded-full bg-secondary text-on-secondary flex items-center justify-center shadow-xs">
+<span class="material-symbols-outlined text-[14px]" data-icon="check" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<span class="text-label-sm font-label-sm text-secondary mt-1">Doctor</span>
+</div>
+<!-- Connector Line 1 (Done) -->
+<div class="flex-1 h-[2px] bg-secondary -mt-3.5 mx-1"></div>
+<!-- Step 2: Active -->
+<div class="flex flex-col items-center z-10">
+<div class="w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center ring-4 ring-primary/20 shadow-xs">
+<span class="text-label-sm font-label-sm text-on-primary">2</span>
+</div>
+<span class="text-label-sm font-label-sm text-primary mt-1 font-bold">Slot</span>
+</div>
+<!-- Connector Line 2 (Pending) -->
+<div class="flex-1 h-[2px] bg-outline-variant -mt-3.5 mx-1"></div>
+<!-- Step 3: Upcoming -->
+<div class="flex flex-col items-center z-10">
+<div class="w-6 h-6 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center">
+<span class="text-label-sm font-label-sm">3</span>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant mt-1">Patient</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Booking Canvas -->
+<main class="flex-1 px-space-md py-space-md space-y-space-md">
+<!-- Selected Doctor Mini-Card (Bento Style Preview) -->
+<section class="bg-surface-container-lowest border border-outline-variant/50 rounded-xl p-space-md shadow-sm relative overflow-hidden">
+<div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-bl-full pointer-events-none"></div>
+<div class="flex items-start gap-space-md">
+<div class="relative shrink-0">
+<img class="w-14 h-14 rounded-xl object-cover border border-outline-variant/60 shadow-xs" data-alt="Close up professional portrait of Dr. Arvind Sharma, a distinguished male senior cardiologist in a crisp clinical doctor coat with a stethoscope over his shoulders, neutral medical clinic background with soft calm lighting and subtle teal accents reflecting high healthcare precision." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAimRJGY6tsvdAE8err_j1KLZSSTcwpzEM9uQ1WCf5Ws-U-B7JcoSgN1a3Ddjq0_efrW_iXyO9ClB78E6CoVYYalO540RSUKUQ1RRZMPLjeUT8wrrJuDoaJ4-FCBGjszmBHXi4txfLzCEnrXiBud07B63kA8J5SM4ZZlUWh8aEwZGEVsQoGrFb9KeGhy_c0At5Cl3kDZpUw3OGXsu4VteXjFrexdnGmUjzKHFrQh8gXLqRT-YwxbCOKMQ"/>
+<span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-secondary-fixed-dim border-2 border-surface-container-lowest rounded-full ring-1 ring-secondary/20"></span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between gap-1">
+<h2 class="text-headline-sm font-headline-sm text-on-surface truncate text-[16px]">Dr. Arvind Sharma</h2>
+<span class="inline-flex items-center gap-1 bg-surface-container-low px-2 py-0.5 rounded-full text-label-sm font-label-sm text-primary shrink-0">
+<span class="material-symbols-outlined text-[13px]" data-icon="verified" data-weight="fill" style="font-variation-settings: 'FILL' 1;">verified</span>
+                MD, DM
+              </span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Senior Cardiologist • Cardiology Dept</p>
+<div class="flex items-center gap-1.5 mt-1 text-body-sm text-tertiary">
+<span class="material-symbols-outlined text-[15px] text-tertiary" data-icon="domain">domain</span>
+<span class="truncate">Metro Heart Centre, New Delhi</span>
+</div>
+<div class="mt-2.5 pt-2 border-t border-surface-container flex items-center justify-between">
+<span class="text-body-sm font-body-sm text-on-surface-variant">OPD Consultation Fee</span>
+<span class="text-headline-sm font-headline-sm text-primary font-bold">₹1,200</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Date Carousel Section -->
+<section class="space-y-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary" data-icon="calendar_month">calendar_month</span>
+<h3 class="text-headline-sm font-headline-sm text-on-surface text-[15px]">Select Appointment Date</h3>
+</div>
+<span class="text-label-sm font-label-sm bg-secondary/10 text-secondary px-2 py-0.5 rounded-full font-bold">October 2024</span>
+</div>
+<!-- Horizontal Dates Scroll -->
+<div class="flex gap-space-sm overflow-x-auto no-scrollbar pb-1 pt-0.5">
+<!-- Mon 21 Oct -->
+<button class="shrink-0 flex flex-col items-center justify-center w-[84px] py-2.5 rounded-xl border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low transition-all">
+<span class="text-label-sm font-label-sm text-on-surface-variant">Mon</span>
+<span class="text-headline-sm font-headline-sm text-on-surface my-0.5">21</span>
+<span class="text-[10px] font-label-sm text-error bg-error-container/40 px-1.5 rounded-full mt-0.5">Full</span>
+</button>
+<!-- Tue 22 Oct (Selected Active) -->
+<button class="shrink-0 flex flex-col items-center justify-center w-[84px] py-2.5 rounded-xl bg-primary text-on-primary shadow-sm border-2 border-primary ring-2 ring-primary/20 transition-all scale-[1.02]">
+<span class="text-label-sm font-label-sm text-on-primary/80">Tue</span>
+<span class="text-headline-sm font-headline-sm text-on-primary my-0.5 font-bold">22</span>
+<span class="text-[10px] font-label-sm bg-surface-container-lowest text-primary px-1.5 py-0.2 rounded-full font-bold shadow-xs">4 Slots Left</span>
+</button>
+<!-- Wed 23 Oct -->
+<button class="shrink-0 flex flex-col items-center justify-center w-[84px] py-2.5 rounded-xl border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low transition-all">
+<span class="text-label-sm font-label-sm text-on-surface-variant">Wed</span>
+<span class="text-headline-sm font-headline-sm text-on-surface my-0.5">23</span>
+<span class="text-[10px] font-label-sm text-secondary bg-secondary/10 px-1.5 rounded-full mt-0.5">8 Slots</span>
+</button>
+<!-- Thu 24 Oct -->
+<button class="shrink-0 flex flex-col items-center justify-center w-[84px] py-2.5 rounded-xl border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low transition-all">
+<span class="text-label-sm font-label-sm text-on-surface-variant">Thu</span>
+<span class="text-headline-sm font-headline-sm text-on-surface my-0.5">24</span>
+<span class="text-[10px] font-label-sm text-secondary bg-secondary/10 px-1.5 rounded-full mt-0.5">12 Slots</span>
+</button>
+</div>
+</section>
+<!-- Live Slot Status Legend -->
+<section class="flex items-center justify-between px-2 py-1.5 bg-surface-container-low rounded-lg text-label-sm font-label-sm">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+<span class="text-on-surface-variant">Available</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+<span class="text-on-surface-variant">Filling Fast</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-outline-variant"></span>
+<span class="text-on-surface-variant">Booked</span>
+</div>
+</section>
+<!-- Live Availability Grid -->
+<section class="space-y-space-md">
+<!-- Morning Shift (9:00 AM - 12:30 PM) -->
+<div class="space-y-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1 text-on-surface">
+<span class="material-symbols-outlined text-[17px] text-primary" data-icon="wb_sunny">wb_sunny</span>
+<h4 class="text-label-lg font-label-lg font-bold">Morning Shift</h4>
+</div>
+<span class="text-body-sm font-body-sm text-tertiary">09:00 AM - 12:30 PM</span>
+</div>
+<div class="grid grid-cols-3 gap-2">
+<!-- 9:30 AM (Booked / Strikethrough) -->
+<div class="flex flex-col items-center justify-center p-2 rounded-xl bg-surface-container-high/60 border border-outline-variant/40 cursor-not-allowed opacity-60">
+<span class="text-body-sm font-body-sm line-through text-outline">09:30 AM</span>
+<span class="text-[10px] font-label-sm text-outline mt-0.5">Booked</span>
+</div>
+<!-- 10:00 AM (Booked / Strikethrough) -->
+<div class="flex flex-col items-center justify-center p-2 rounded-xl bg-surface-container-high/60 border border-outline-variant/40 cursor-not-allowed opacity-60">
+<span class="text-body-sm font-body-sm line-through text-outline">10:00 AM</span>
+<span class="text-[10px] font-label-sm text-outline mt-0.5">Booked</span>
+</div>
+<!-- 10:15 AM (Selected with Teal Glow) -->
+<button class="slot-glow-active flex flex-col items-center justify-center p-2 rounded-xl bg-primary text-on-primary border-2 border-primary-fixed shadow-md relative">
+<span class="absolute -top-1.5 -right-1 bg-secondary text-on-secondary text-[9px] px-1 rounded-full font-bold">Token 15</span>
+<span class="text-label-lg font-label-lg text-on-primary">10:15 AM</span>
+<span class="text-[10px] font-label-sm text-primary-fixed mt-0.5">Selected</span>
+</button>
+<!-- 10:45 AM (Available) -->
+<button class="flex flex-col items-center justify-center p-2 rounded-xl bg-surface-container-lowest border border-secondary/40 hover:border-secondary text-on-surface hover:bg-surface-container-low transition-all">
+<span class="text-label-lg font-label-lg text-on-surface">10:45 AM</span>
+<span class="text-[10px] font-label-sm text-secondary font-semibold mt-0.5">Available</span>
+</button>
+<!-- 11:00 AM (Amber - Filling Fast 1 Left) -->
+<button class="flex flex-col items-center justify-center p-2 rounded-xl bg-amber-50/80 border border-amber-300 hover:border-amber-400 text-on-surface transition-all">
+<span class="text-label-lg font-label-lg text-on-surface">11:00 AM</span>
+<span class="text-[10px] font-label-sm text-amber-700 font-bold mt-0.5">1 left</span>
+</button>
+<!-- 11:30 AM (Available) -->
+<button class="flex flex-col items-center justify-center p-2 rounded-xl bg-surface-container-lowest border border-secondary/40 hover:border-secondary text-on-surface hover:bg-surface-container-low transition-all">
+<span class="text-label-lg font-label-lg text-on-surface">11:30 AM</span>
+<span class="text-[10px] font-label-sm text-secondary font-semibold mt-0.5">Available</span>
+</button>
+</div>
+</div>
+<!-- Afternoon Shift (2:00 PM - 4:30 PM) -->
+<div class="space-y-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1 text-on-surface">
+<span class="material-symbols-outlined text-[17px] text-primary" data-icon="wb_twilight">wb_twilight</span>
+<h4 class="text-label-lg font-label-lg font-bold">Afternoon Shift</h4>
+</div>
+<span class="text-body-sm font-body-sm text-tertiary">02:00 PM - 04:30 PM</span>
+</div>
+<div class="grid grid-cols-3 gap-2">
+<button class="flex flex-col items-center justify-center p-2 rounded-xl bg-surface-container-lowest border border-secondary/40 hover:border-secondary text-on-surface transition-all">
+<span class="text-body-md font-label-lg">02:15 PM</span>
+<span class="text-[10px] font-label-sm text-secondary font-semibold mt-0.5">Available</span>
+</button>
+<button class="flex flex-col items-center justify-center p-2 rounded-xl bg-surface-container-lowest border border-secondary/40 hover:border-secondary text-on-surface transition-all">
+<span class="text-body-md font-label-lg">03:00 PM</span>
+<span class="text-[10px] font-label-sm text-secondary font-semibold mt-0.5">Available</span>
+</button>
+<div class="flex flex-col items-center justify-center p-2 rounded-xl bg-surface-container-high/60 border border-outline-variant/40 cursor-not-allowed opacity-60">
+<span class="text-body-sm font-body-sm line-through text-outline">03:45 PM</span>
+<span class="text-[10px] font-label-sm text-outline mt-0.5">Booked</span>
+</div>
+</div>
+</div>
+<!-- Evening Shift -->
+<div class="space-y-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1 text-on-surface">
+<span class="material-symbols-outlined text-[17px] text-primary" data-icon="bedtime">bedtime</span>
+<h4 class="text-label-lg font-label-lg font-bold">Evening Shift</h4>
+</div>
+<span class="text-body-sm font-body-sm text-tertiary">Not Scheduled</span>
+</div>
+<p class="text-body-sm font-body-sm text-tertiary italic bg-surface-container-low p-2 rounded-lg text-center">
+            Doctor not available for OPD in Evening rounds (Ward duty).
+          </p>
+</div>
+</section>
+<!-- Patient Details Preview & Selection Toggle -->
+<section class="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-space-md space-y-3">
+<div class="flex items-center justify-between">
+<span class="text-label-lg font-label-lg text-on-surface">Patient Details</span>
+<span class="text-label-sm font-label-sm text-primary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[15px]" data-icon="check_circle">check_circle</span> Verified
+          </span>
+</div>
+<!-- Segmented Toggle -->
+<div class="flex p-1 bg-surface-container-low rounded-xl border border-outline-variant/30">
+<button class="flex-1 py-1.5 px-2 rounded-lg bg-surface-container-lowest text-primary shadow-xs font-label-sm text-label-sm flex items-center justify-center gap-1 transition-all">
+<span class="material-symbols-outlined text-[14px]" data-icon="badge">badge</span>
+            Existing UHID
+          </button>
+<button class="flex-1 py-1.5 px-2 rounded-lg text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm flex items-center justify-center gap-1 transition-all">
+<span class="material-symbols-outlined text-[14px]" data-icon="person_add">person_add</span>
+            + New Walk-in
+          </button>
+</div>
+<!-- Patient Profile Snippet -->
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface border border-outline-variant/40">
+<div class="flex items-center gap-2.5">
+<div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-label-lg">
+              RG
+            </div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="text-label-lg font-label-lg text-on-surface font-bold">Rajesh Gupta</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant">(52, M)</span>
+</div>
+<p class="text-body-sm font-body-sm text-tertiary">UHID: MED-2024-88412</p>
+</div>
+</div>
+<button aria-label="Edit patient" class="text-primary hover:text-primary-container p-1">
+<span class="material-symbols-outlined text-[18px]" data-icon="edit">edit</span>
+</button>
+</div>
+</section>
+<!-- Hospital Clinical Guidelines Alert -->
+<div class="flex items-start gap-2 p-space-sm bg-primary/5 border border-primary/20 rounded-xl text-primary">
+<span class="material-symbols-outlined text-[18px] shrink-0 mt-0.5" data-icon="info">info</span>
+<p class="text-body-sm font-body-sm text-on-surface">
+          Please arrive 15 minutes before your scheduled 10:15 AM slot for vital parameter screening at Triage Desk 2.
+        </p>
+</div>
+</main>
+<!-- Docked Sticky Bottom Confirmation Sheet -->
+<footer class="fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none">
+<div class="w-full max-w-[440px] bg-surface-container-lowest border-t border-outline-variant/60 p-space-md shadow-2xl pointer-events-auto rounded-t-2xl space-y-3">
+<!-- Live OPD Token & Fee Breakdown -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="flex flex-col">
+<span class="text-label-sm font-label-sm text-tertiary">Assigned Token</span>
+<span class="text-headline-md font-headline-md text-primary font-bold tracking-tight">Token #15</span>
+</div>
+<span class="h-6 w-[1px] bg-outline-variant mx-1"></span>
+<div class="flex flex-col">
+<span class="text-label-sm font-label-sm text-tertiary">Estimated Time</span>
+<span class="text-label-md font-label-md text-on-surface">Tue, 10:15 AM</span>
+</div>
+</div>
+<div class="text-right">
+<span class="text-label-sm font-label-sm text-tertiary">Total Payable</span>
+<div class="text-headline-md font-headline-md text-on-surface font-bold">₹1,200</div>
+</div>
+</div>
+<!-- Primary Action CTA Button -->
+<button class="w-full py-3.5 px-space-md bg-primary hover:bg-primary-container active:scale-[0.99] text-on-primary rounded-xl font-label-lg text-label-lg flex items-center justify-center gap-2 transition-all shadow-md">
+<span class="material-symbols-outlined animate-bounce text-[20px]" data-icon="check_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span>Confirm &amp; Generate OPD Slip</span>
+<span class="material-symbols-outlined text-[18px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<div class="flex items-center justify-center gap-1.5 text-center text-body-sm text-tertiary">
+<span class="material-symbols-outlined text-[13px] text-secondary" data-icon="lock">lock</span>
+<span>Instant SMS confirmation with QR entry badge will be dispatched</span>
+</div>
+</div>
+</footer>
+</div>
+</body></html>

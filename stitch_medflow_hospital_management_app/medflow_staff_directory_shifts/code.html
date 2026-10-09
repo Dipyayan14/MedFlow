@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MedFlow - Staff &amp; Healthcare Employee Directory</title>
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "inverse-surface": "#2d3133",
+            "secondary-fixed-dim": "#4edea3",
+            "inverse-on-surface": "#eff1f3",
+            "on-tertiary": "#ffffff",
+            "primary": "#006574",
+            "on-background": "#191c1e",
+            "secondary": "#006c49",
+            "surface-container-lowest": "#ffffff",
+            "on-tertiary-fixed": "#0d1c2e",
+            "on-primary-fixed": "#001f25",
+            "error-container": "#ffdad6",
+            "primary-fixed": "#a4eeff",
+            "tertiary": "#4f5d71",
+            "surface": "#f7f9fb",
+            "on-primary-fixed-variant": "#004e5a",
+            "surface-variant": "#e0e3e5",
+            "on-primary": "#ffffff",
+            "tertiary-fixed": "#d5e3fc",
+            "on-tertiary-fixed-variant": "#3a485b",
+            "on-primary-container": "#f8fdff",
+            "tertiary-fixed-dim": "#b9c7df",
+            "primary-fixed-dim": "#7ed3e5",
+            "on-tertiary-container": "#fdfcff",
+            "on-error-container": "#93000a",
+            "on-surface": "#191c1e",
+            "outline": "#6e797c",
+            "on-secondary-fixed": "#002113",
+            "on-error": "#ffffff",
+            "on-secondary-fixed-variant": "#005236",
+            "error": "#ba1a1a",
+            "inverse-primary": "#7ed3e5",
+            "secondary-container": "#6cf8bb",
+            "background": "#f7f9fb",
+            "surface-dim": "#d8dadc",
+            "surface-container-highest": "#e0e3e5",
+            "tertiary-container": "#67758b",
+            "surface-container-high": "#e6e8ea",
+            "outline-variant": "#bec8cb",
+            "surface-bright": "#f7f9fb",
+            "on-secondary-container": "#00714d",
+            "surface-container-low": "#f2f4f6",
+            "surface-tint": "#006877",
+            "on-surface-variant": "#3e484b",
+            "secondary-fixed": "#6ffbbe",
+            "surface-container": "#eceef0",
+            "primary-container": "#1c8090",
+            "on-secondary": "#ffffff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-md": "1rem",
+            "space-xl": "2rem",
+            "gutter": "1rem",
+            "space-sm": "0.5rem",
+            "margin": "1rem",
+            "space-xs": "0.25rem",
+            "space-lg": "1.25rem"
+          },
+          "fontFamily": {
+            "label-md": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-lg-mobile": ["Plus Jakarta Sans"],
+            "label-lg": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "headline-lg-mobile": ["26px", { "lineHeight": "34px", "fontWeight": "700" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "700" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    @keyframes emerald-pulse {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45); }
+      70% { box-shadow: 0 0 0 7px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+    .pulse-live {
+      animation: emerald-pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased pb-28">
+<!-- Top App Bar (Shared Components JSON Anchor) -->
+<header class="bg-surface-container-lowest sticky top-0 z-40 shadow-sm">
+<div class="flex justify-between items-center w-full px-space-md py-space-sm max-w-7xl mx-auto">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-2xl" data-icon="local_hospital">local_hospital</span>
+<span class="font-headline-sm text-headline-sm text-primary tracking-tight font-bold">MedFlow</span>
+</div>
+<div class="flex items-center gap-3">
+<button aria-label="Emergency Mode" class="w-9 h-9 rounded-full flex items-center justify-center hover:bg-surface-container-high transition-transform duration-150 active:scale-95 text-primary" title="Emergency Mode">
+<span class="material-symbols-outlined text-error text-xl" data-icon="emergency">emergency</span>
+</button>
+<button aria-label="Notifications" class="w-9 h-9 rounded-full flex items-center justify-center hover:bg-surface-container-high transition-transform duration-150 active:scale-95 text-on-surface-variant" title="Notifications">
+<span class="material-symbols-outlined text-xl" data-icon="notifications">notifications</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content Layout -->
+<main class="max-w-md mx-auto px-space-md pt-space-md space-y-space-md">
+<!-- Page Title & Clinical Search Section -->
+<section class="space-y-space-sm">
+<div class="flex items-center justify-between">
+<div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface tracking-tight">Hospital Staff Directory</h1>
+<p class="font-body-sm text-body-sm text-outline">St. Jude Medical Command &amp; Center</p>
+</div>
+<button aria-label="Grid settings" class="p-2 rounded-xl bg-surface-container-low text-primary hover:bg-surface-container-high active:scale-95 transition-transform border border-outline-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-xl" data-icon="view_agenda">view_agenda</span>
+</button>
+</div>
+<!-- Search Input with Action Trigger -->
+<div class="flex items-center gap-2 pt-1">
+<div class="relative flex-1">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-tertiary">
+<span class="material-symbols-outlined text-xl" data-icon="search">search</span>
+</div>
+<input class="w-full h-12 pl-10 pr-3 rounded-xl bg-surface-container-lowest border border-outline-variant text-body-md font-body-md text-on-surface placeholder:text-outline focus:outline-none focus:border-2 focus:border-primary transition-all duration-150" placeholder="Search by name, employee code, or ward..." type="text"/>
+</div>
+<button aria-label="Filters" class="h-12 w-12 flex items-center justify-center bg-surface-container-lowest border border-outline-variant text-primary rounded-xl hover:bg-surface-container-high active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-xl" data-icon="tune">tune</span>
+</button>
+</div>
+</section>
+<!-- Sub-header Shift Status Widget -->
+<section class="bg-primary text-on-primary rounded-xl p-space-md shadow-sm">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-fixed text-lg" data-icon="schedule">schedule</span>
+<span class="font-label-md text-label-md text-primary-fixed font-bold tracking-wide uppercase">Active Shift Period</span>
+</div>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-label-sm font-label-sm bg-primary-container text-on-primary-container">
+          Ward In-Sync
+        </span>
+</div>
+<div class="space-y-1">
+<div class="font-headline-sm text-headline-sm font-semibold tracking-tight text-on-primary">
+          Shift: Morning A (08:00 - 16:00)
+        </div>
+<div class="flex items-center gap-2 font-body-sm text-body-sm text-surface-variant">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed pulse-live"></span>
+<span>168 Staff Checked In</span>
+<span class="opacity-40">•</span>
+<span>Capacity: 94.2%</span>
+</div>
+</div>
+</section>
+<!-- Segmented Horizontal Filter Chips -->
+<nav aria-label="Staff filters" class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+<button class="whitespace-nowrap px-3.5 py-1.5 rounded-full bg-primary text-on-primary font-label-md text-label-md shadow-sm active:scale-95 transition-transform">
+        All Staff
+      </button>
+<button class="whitespace-nowrap px-3.5 py-1.5 rounded-full bg-surface-container-lowest border border-outline-variant text-on-surface-variant hover:bg-surface-container-high font-label-md text-label-md active:scale-95 transition-transform">
+        Doctors (48)
+      </button>
+<button class="whitespace-nowrap px-3.5 py-1.5 rounded-full bg-surface-container-lowest border border-outline-variant text-on-surface-variant hover:bg-surface-container-high font-label-md text-label-md active:scale-95 transition-transform">
+        Nurses (125)
+      </button>
+<button class="whitespace-nowrap px-3.5 py-1.5 rounded-full bg-surface-container-lowest border border-outline-variant text-on-surface-variant hover:bg-surface-container-high font-label-md text-label-md active:scale-95 transition-transform">
+        Duty Desk (14)
+      </button>
+<button class="whitespace-nowrap px-3.5 py-1.5 rounded-full bg-surface-container-lowest border border-outline-variant text-on-surface-variant hover:bg-surface-container-high font-label-md text-label-md active:scale-95 transition-transform">
+        On Leave (9)
+      </button>
+</nav>
+<!-- Staff Roster Cards List -->
+<div class="space-y-space-md">
+<!-- Staff Card 1: Dr. Arvind Sharma -->
+<article class="bg-surface-container-lowest rounded-xl p-space-md border border-outline-variant shadow-sm space-y-3">
+<div class="flex items-start justify-between gap-2">
+<div class="flex gap-3">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high text-primary font-bold flex items-center justify-center font-headline-sm text-headline-sm border border-outline-variant shrink-0">
+              AS
+            </div>
+<div>
+<div class="flex items-center gap-1.5">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Dr. Arvind Sharma</h2>
+<span class="material-symbols-outlined text-primary text-base" data-icon="verified" title="Credential Verified">verified</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant font-medium">Chief Interventional Cardiologist</p>
+<p class="font-label-sm text-label-sm text-outline mt-0.5">Emp #MED-1042</p>
+</div>
+</div>
+<!-- Status: On Duty (Green pulse) -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container text-secondary font-label-sm text-label-sm shrink-0 border border-outline-variant">
+<span class="w-2 h-2 rounded-full bg-secondary pulse-live"></span>
+<span>On Duty</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-lg p-2.5 flex items-center justify-between text-body-sm font-body-sm text-on-surface-variant">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="meeting_room">meeting_room</span>
+<span>Morning Shift (Room 204)</span>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-semibold">Cath Lab A</span>
+</div>
+<div class="grid grid-cols-2 gap-2 pt-1">
+<button class="py-2.5 px-3 rounded-lg border border-primary text-primary font-label-md text-label-md flex items-center justify-center gap-1.5 hover:bg-surface-container-low active:scale-95 transition-all">
+<span class="material-symbols-outlined text-base" data-icon="calendar_month">calendar_month</span>
+<span>View Schedule</span>
+</button>
+<button class="py-2.5 px-3 rounded-lg bg-primary text-on-primary font-label-md text-label-md flex items-center justify-center gap-1.5 hover:bg-primary-container active:scale-95 transition-all shadow-sm">
+<span class="material-symbols-outlined text-base" data-icon="call">call</span>
+<span>Contact</span>
+</button>
+</div>
+</article>
+<!-- Staff Card 2: Sister Mary Joseph -->
+<article class="bg-surface-container-lowest rounded-xl p-space-md border border-outline-variant shadow-sm space-y-3">
+<div class="flex items-start justify-between gap-2">
+<div class="flex gap-3">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high text-primary font-bold flex items-center justify-center font-headline-sm text-headline-sm border border-outline-variant shrink-0">
+              MJ
+            </div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Sister Mary Joseph, RN</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant font-medium">Head Nurse - Intensive Cardiac Care (ICCU)</p>
+<p class="font-label-sm text-label-sm text-outline mt-0.5">Emp #NUR-3081</p>
+</div>
+</div>
+<!-- Status: On Duty -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container text-secondary font-label-sm text-label-sm shrink-0 border border-outline-variant">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span>On Duty</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-lg p-2.5 flex items-center justify-between text-body-sm font-body-sm text-on-surface-variant">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="domain">domain</span>
+<span>Morning Shift (Floor 2)</span>
+</div>
+<span class="font-label-sm text-label-sm text-outline">Beds 201–216</span>
+</div>
+<div class="grid grid-cols-2 gap-2 pt-1">
+<button class="py-2.5 px-3 rounded-lg border border-outline-variant text-on-surface-variant font-label-md text-label-md flex items-center justify-center gap-1.5 hover:bg-surface-container-high active:scale-95 transition-all">
+<span class="material-symbols-outlined text-base" data-icon="badge">badge</span>
+<span>Profile</span>
+</button>
+<button class="py-2.5 px-3 rounded-lg bg-surface-container-high text-primary font-label-md text-label-md flex items-center justify-center gap-1.5 hover:bg-surface-container-highest active:scale-95 transition-all">
+<span class="material-symbols-outlined text-base" data-icon="chat">chat</span>
+<span>Page Staff</span>
+</button>
+</div>
+</article>
+<!-- Staff Card 3: Dr. Priya Nair -->
+<article class="bg-surface-container-lowest rounded-xl p-space-md border border-outline-variant shadow-sm space-y-3">
+<div class="flex items-start justify-between gap-2">
+<div class="flex gap-3">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high text-primary font-bold flex items-center justify-center font-headline-sm text-headline-sm border border-outline-variant shrink-0">
+              PN
+            </div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Dr. Priya Nair</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant font-medium">Consultant Pediatrician</p>
+<p class="font-label-sm text-label-sm text-outline mt-0.5">Emp #MED-2109</p>
+</div>
+</div>
+<!-- Status: Half-Day Leave Approved -->
+<div class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-surface-container-high text-tertiary-container font-label-sm text-label-sm shrink-0 border border-outline-variant">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+<span>Half-Day</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-lg p-2.5 flex items-center gap-2 text-body-sm font-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-tertiary text-lg" data-icon="event_busy">event_busy</span>
+<span class="text-on-surface">Half-Day Leave Approved <strong class="font-semibold text-primary">(Leaves at 1:00 PM)</strong></span>
+</div>
+<div class="flex items-center justify-between text-body-sm font-body-sm pt-1">
+<span class="text-outline">Cover Physician: Dr. K. Rao</span>
+<button class="text-primary font-label-md text-label-md inline-flex items-center gap-1 hover:underline active:scale-95 transition-transform">
+<span>Handover Log</span>
+<span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</article>
+<!-- Staff Card 4: Anjali Rawat -->
+<article class="bg-surface-container-lowest rounded-xl p-space-md border border-outline-variant shadow-sm space-y-3">
+<div class="flex items-start justify-between gap-2">
+<div class="flex gap-3">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high text-primary font-bold flex items-center justify-center font-headline-sm text-headline-sm border border-outline-variant shrink-0">
+              AR
+            </div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Anjali Rawat</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant font-medium">Senior Triage Receptionist</p>
+<p class="font-label-sm text-label-sm text-outline mt-0.5">Emp #REC-0412</p>
+</div>
+</div>
+<!-- Status: Checked In -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container text-secondary font-label-sm text-label-sm shrink-0 border border-outline-variant">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span>Checked In</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-lg p-2.5 flex items-center justify-between text-body-sm font-body-sm text-on-surface-variant">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="desktop_windows">desktop_windows</span>
+<span>Desk 02 • Main ER Lobby</span>
+</div>
+<span class="font-label-sm text-label-sm text-secondary font-semibold">Live Intake Active</span>
+</div>
+<div class="flex items-center justify-end gap-2 pt-1">
+<button class="py-2 px-3 rounded-lg border border-outline-variant text-on-surface-variant font-label-md text-label-md flex items-center gap-1.5 hover:bg-surface-container-high active:scale-95 transition-all">
+<span class="material-symbols-outlined text-base" data-icon="swap_horiz">swap_horiz</span>
+<span>Desk Relieve</span>
+</button>
+<button class="py-2 px-3 rounded-lg bg-surface-container-high text-primary font-label-md text-label-md flex items-center gap-1.5 hover:bg-surface-container-highest active:scale-95 transition-all">
+<span class="material-symbols-outlined text-base" data-icon="call">call</span>
+<span>Ext. #402</span>
+</button>
+</div>
+</article>
+<!-- Staff Card 5: Dr. Rajesh Kulkarni -->
+<article class="bg-surface-container-lowest rounded-xl p-space-md border border-outline-variant shadow-sm space-y-3">
+<div class="flex items-start justify-between gap-2">
+<div class="flex gap-3">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high text-primary font-bold flex items-center justify-center font-headline-sm text-headline-sm border border-outline-variant shrink-0">
+              RK
+            </div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Dr. Rajesh Kulkarni</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant font-medium">Orthopedic Surgeon</p>
+<p class="font-label-sm text-label-sm text-outline mt-0.5">Emp #MED-0981</p>
+</div>
+</div>
+<!-- Status: On Emergency Standby -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm shrink-0">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span>Standby</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-lg p-2.5 flex items-center justify-between text-body-sm font-body-sm text-on-surface-variant">
+<div class="flex items-center gap-1.5 text-error">
+<span class="material-symbols-outlined text-lg" data-icon="warning">warning</span>
+<span class="font-medium">On Emergency Standby</span>
+</div>
+<span class="font-label-sm text-label-sm text-outline">Trauma Bay B</span>
+</div>
+<div class="grid grid-cols-2 gap-2 pt-1">
+<button class="py-2.5 px-3 rounded-lg border border-outline-variant text-on-surface-variant font-label-md text-label-md flex items-center justify-center gap-1.5 hover:bg-surface-container-high active:scale-95 transition-all">
+<span class="material-symbols-outlined text-base" data-icon="timer">timer</span>
+<span>Response Log</span>
+</button>
+<button class="py-2.5 px-3 rounded-lg bg-error text-on-error font-label-md text-label-md flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-95 transition-all shadow-sm">
+<span class="material-symbols-outlined text-base" data-icon="e911_emergency">e911_emergency</span>
+<span>Dispatch / Alert</span>
+</button>
+</div>
+</article>
+</div>
+</main>
+<!-- Floating Quick Action Button -->
+<aside class="fixed bottom-20 right-4 z-40">
+<button class="inline-flex items-center gap-2 px-4 py-3.5 bg-primary text-on-primary rounded-full shadow-lg hover:bg-primary-container active:scale-95 transition-all font-label-lg text-label-lg">
+<span class="material-symbols-outlined text-xl" data-icon="add">add</span>
+<span>Request Shift Swap / Leave</span>
+</button>
+</aside>
+<!-- Bottom Navigation Bar (Shared Components JSON Anchor) -->
+<!-- Contextual State: Queue / Staff roster destination active -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-space-xs py-space-xs bg-surface-container-lowest shadow-md">
+<!-- Home -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-space-xs py-space-xs hover:bg-surface-container-low hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="home">home</span>
+<span class="font-label-sm text-label-sm">Home</span>
+</a>
+<!-- Queue (ACTIVE DESTINATION FOR STAFF & ROSTER FLOW) -->
+<a class="flex flex-col items-center justify-center bg-primary text-on-primary rounded-full px-space-sm py-space-xs transition-all" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-sm text-label-sm">Queue</span>
+</a>
+<!-- EHR -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-space-xs py-space-xs hover:bg-surface-container-low hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="clinical_notes">clinical_notes</span>
+<span class="font-label-sm text-label-sm">EHR</span>
+</a>
+<!-- Alerts -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-space-xs py-space-xs hover:bg-surface-container-low hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="notifications">notifications</span>
+<span class="font-label-sm text-label-sm">Alerts</span>
+</a>
+<!-- Profile -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-space-xs py-space-xs hover:bg-surface-container-low hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="account_circle">account_circle</span>
+<span class="font-label-sm text-label-sm">Profile</span>
+</a>
+</nav>
+</body></html>

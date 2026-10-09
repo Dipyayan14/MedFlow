@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MedFlow - Notifications & Clinical Alerts Center</title>
+<!-- Google Fonts & Material Symbols -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@100..900&display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS via CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "inverse-surface": "#2d3133",
+            "secondary-fixed-dim": "#4edea3",
+            "inverse-on-surface": "#eff1f3",
+            "on-tertiary": "#ffffff",
+            "primary": "#006574",
+            "on-background": "#191c1e",
+            "secondary": "#006c49",
+            "surface-container-lowest": "#ffffff",
+            "on-tertiary-fixed": "#0d1c2e",
+            "on-primary-fixed": "#001f25",
+            "error-container": "#ffdad6",
+            "primary-fixed": "#a4eeff",
+            "tertiary": "#4f5d71",
+            "surface": "#f7f9fb",
+            "on-primary-fixed-variant": "#004e5a",
+            "surface-variant": "#e0e3e5",
+            "on-primary": "#ffffff",
+            "tertiary-fixed": "#d5e3fc",
+            "on-tertiary-fixed-variant": "#3a485b",
+            "on-primary-container": "#f8fdff",
+            "tertiary-fixed-dim": "#b9c7df",
+            "primary-fixed-dim": "#7ed3e5",
+            "on-tertiary-container": "#fdfcff",
+            "on-error-container": "#93000a",
+            "on-surface": "#191c1e",
+            "outline": "#6e797c",
+            "on-secondary-fixed": "#002113",
+            "on-error": "#ffffff",
+            "on-secondary-fixed-variant": "#005236",
+            "error": "#ba1a1a",
+            "inverse-primary": "#7ed3e5",
+            "secondary-container": "#6cf8bb",
+            "background": "#f7f9fb",
+            "surface-dim": "#d8dadc",
+            "surface-container-highest": "#e0e3e5",
+            "tertiary-container": "#67758b",
+            "surface-container-high": "#e6e8ea",
+            "outline-variant": "#bec8cb",
+            "surface-bright": "#f7f9fb",
+            "on-secondary-container": "#00714d",
+            "surface-container-low": "#f2f4f6",
+            "surface-tint": "#006877",
+            "on-surface-variant": "#3e484b",
+            "secondary-fixed": "#6ffbbe",
+            "surface-container": "#eceef0",
+            "primary-container": "#1c8090",
+            "on-secondary": "#ffffff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-md": "1rem",
+            "space-xl": "2rem",
+            "gutter": "1rem",
+            "space-sm": "0.5rem",
+            "margin": "1rem",
+            "space-xs": "0.25rem",
+            "space-lg": "1.25rem"
+          },
+          "fontFamily": {
+            "label-md": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-lg-mobile": ["Plus Jakarta Sans"],
+            "label-lg": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "headline-lg-mobile": ["26px", { "lineHeight": "34px", "fontWeight": "700" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "700" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+    .pulse-live {
+      animation: pulse-ring 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+    }
+    @keyframes pulse-red-ring {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(186, 26, 26, 0.4); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(186, 26, 26, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(186, 26, 26, 0); }
+    }
+    .pulse-critical {
+      animation: pulse-red-ring 1.6s infinite ease-in-out;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased min-h-screen flex flex-col justify-between selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- Top App Bar (Shared Component Anchor) -->
+<header class="bg-surface-container-lowest dark:bg-inverse-surface shadow-sm dark:shadow-none sticky top-0 z-40">
+<div class="flex justify-between items-center w-full px-space-md py-space-sm max-w-7xl mx-auto">
+<div class="flex items-center space-x-space-sm">
+<span class="material-symbols-outlined text-primary dark:text-inverse-primary" data-icon="local_hospital">local_hospital</span>
+<span class="text-headline-sm font-headline-sm text-primary dark:text-inverse-primary tracking-tight">MedFlow</span>
+</div>
+<div class="flex items-center space-x-space-sm">
+<button aria-label="System status" class="p-1 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-primary" data-icon="emergency">emergency</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Viewport Container -->
+<main class="flex-1 max-w-md w-full mx-auto px-space-md pt-space-md pb-24 flex flex-col space-y-space-md">
+<!-- Title & System Status Block -->
+<div class="flex items-end justify-between">
+<div>
+<div class="flex items-center space-x-2">
+<h1 class="text-headline-lg-mobile font-headline-lg-mobile text-on-surface tracking-tight">Clinical Notifications</h1>
+</div>
+<div class="flex items-center space-x-2 mt-1">
+<span class="relative flex h-2 w-2">
+<span class="pulse-live absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+</span>
+<span class="text-label-sm font-label-sm text-secondary tracking-wide">LIVE HOSPITAL TELEMETRY • ST. JUDE WING</span>
+</div>
+</div>
+<button class="text-label-md font-label-md text-primary hover:text-on-primary-fixed-variant active:scale-95 transition-transform py-1 px-2 rounded hover:bg-surface-container-low">
+        Mark all as read
+      </button>
+</div>
+<!-- Tab Filter Pills -->
+<div class="flex items-center space-x-space-xs overflow-x-auto no-scrollbar py-1 -mx-space-md px-space-md">
+<!-- Active Pill -->
+<button class="flex items-center space-x-1.5 bg-primary text-on-primary px-3.5 py-1.5 rounded-full text-label-md font-label-md whitespace-nowrap shadow-sm">
+<span>All</span>
+<span class="bg-primary-container text-on-primary-container px-1.5 py-0.2 rounded-full text-label-sm font-label-sm">12</span>
+</button>
+<!-- Pill 2 -->
+<button class="flex items-center space-x-1.5 bg-surface-container text-on-surface-variant hover:bg-surface-container-high px-3.5 py-1.5 rounded-full text-label-md font-label-md whitespace-nowrap transition-colors">
+<span>Availability</span>
+<span class="bg-surface-container-highest text-on-surface px-1.5 py-0.2 rounded-full text-label-sm font-label-sm">4</span>
+</button>
+<!-- Pill 3 -->
+<button class="flex items-center space-x-1.5 bg-surface-container text-on-surface-variant hover:bg-surface-container-high px-3.5 py-1.5 rounded-full text-label-md font-label-md whitespace-nowrap transition-colors">
+<span>OPD Queue</span>
+<span class="bg-surface-container-highest text-on-surface px-1.5 py-0.2 rounded-full text-label-sm font-label-sm">5</span>
+</button>
+<!-- Pill 4 -->
+<button class="flex items-center space-x-1.5 bg-surface-container text-error hover:bg-error-container/40 px-3.5 py-1.5 rounded-full text-label-md font-label-md whitespace-nowrap transition-colors">
+<span class="flex items-center space-x-1">
+<span class="h-1.5 w-1.5 rounded-full bg-error"></span>
+<span>Critical Alerts</span>
+</span>
+<span class="bg-error-container text-on-error-container px-1.5 py-0.2 rounded-full text-label-sm font-label-sm">3</span>
+</button>
+</div>
+<!-- Quick Stats Bento Strip -->
+<section class="grid grid-cols-3 gap-space-xs pt-1">
+<div class="bg-surface-container-lowest p-2.5 rounded-xl border border-outline-variant/50 shadow-sm flex flex-col">
+<span class="text-label-sm font-label-sm text-tertiary">RESPONSE TIME</span>
+<span class="text-headline-sm font-headline-sm text-primary mt-0.5">< 2.4m</span>
+</div>
+<div class="bg-surface-container-lowest p-2.5 rounded-xl border border-outline-variant/50 shadow-sm flex flex-col">
+<span class="text-label-sm font-label-sm text-tertiary">ACTIVE QUEUE</span>
+<span class="text-headline-sm font-headline-sm text-on-surface mt-0.5">38 Pts</span>
+</div>
+<div class="bg-surface-container-lowest p-2.5 rounded-xl border border-outline-variant/50 shadow-sm flex flex-col">
+<span class="text-label-sm font-label-sm text-tertiary">TRAUMA ESC</span>
+<span class="text-headline-sm font-headline-sm text-error mt-0.5">Level 1</span>
+</div>
+</section>
+<!-- Chronological Alert Stream -->
+<div class="space-y-space-sm pt-1">
+<!-- Alert 1: Critical Alert -->
+<article class="relative bg-error-container/30 border border-error/40 rounded-xl p-space-md shadow-sm transition-all overflow-hidden">
+<!-- Swipe gesture affordance indicator on edge -->
+<div class="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col space-y-1 opacity-40">
+<span class="w-1 h-1 rounded-full bg-on-error-container"></span>
+<span class="w-1 h-1 rounded-full bg-on-error-container"></span>
+<span class="w-1 h-1 rounded-full bg-on-error-container"></span>
+</div>
+<div class="flex items-start justify-between">
+<!-- Tag -->
+<div class="inline-flex items-center space-x-1.5 bg-error text-on-error px-2.5 py-0.5 rounded-full text-label-sm font-label-sm tracking-wide">
+<span class="pulse-critical w-1.5 h-1.5 rounded-full bg-on-error"></span>
+<span>CRITICAL ALERT</span>
+</div>
+<!-- Timestamp -->
+<div class="flex items-center space-x-1 text-on-error-container font-label-sm text-label-sm pr-3">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span>
+<span>4 mins ago</span>
+</div>
+</div>
+<div class="mt-space-sm pr-3">
+<p class="text-body-md font-body-md text-on-surface font-semibold leading-snug">
+            Dr. K. Mehta (ER Bay 3) requested urgent Cardiac Consult for Bed #12
+          </p>
+<div class="mt-1 flex items-center space-x-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-error/10 text-error text-label-sm font-label-sm font-bold">
+              Troponin-T Positive
+            </span>
+<span class="text-body-sm font-body-sm text-tertiary">UHID: 9811-A</span>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="mt-space-md flex items-center space-x-space-sm">
+<button class="flex-1 bg-error text-on-error py-2 px-3 rounded-lg text-label-md font-label-md hover:bg-error/90 active:scale-95 transition-all text-center flex items-center justify-center space-x-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="check_circle">check_circle</span>
+<span>Accept Consult</span>
+</button>
+<button class="bg-surface-container-lowest border border-outline-variant text-on-surface py-2 px-3 rounded-lg text-label-md font-label-md hover:bg-surface-container active:scale-95 transition-all text-center">
+            Acknowledge
+          </button>
+</div>
+</article>
+<!-- Alert 2: Availability Change -->
+<article class="relative bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-space-md shadow-sm transition-all overflow-hidden">
+<div class="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col space-y-1 opacity-30">
+<span class="w-1 h-1 rounded-full bg-outline"></span>
+<span class="w-1 h-1 rounded-full bg-outline"></span>
+<span class="w-1 h-1 rounded-full bg-outline"></span>
+</div>
+<div class="flex items-start justify-between">
+<!-- Availability Pill -->
+<div class="inline-flex items-center space-x-1.5 bg-secondary-fixed/40 text-on-secondary-fixed-variant px-2.5 py-0.5 rounded-full text-label-sm font-label-sm">
+<span class="pulse-live w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>AVAILABILITY CHANGE</span>
+</div>
+<!-- Timestamp -->
+<div class="flex items-center space-x-1 text-tertiary font-label-sm text-label-sm pr-3">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span>
+<span>12 mins ago</span>
+</div>
+</div>
+<div class="mt-space-sm pr-3">
+<p class="text-body-md font-body-md text-on-surface leading-snug">
+<strong class="font-headline-sm text-body-md text-primary">Dr. Arvind Sharma</strong> (Cardiology, Rm 204) is now <span class="text-secondary font-semibold">Available</span> for OPD. 6 patients in queue notified.
+          </p>
+</div>
+<div class="mt-3 pt-2.5 border-t border-surface-container-high flex items-center justify-between">
+<span class="text-body-sm font-body-sm text-tertiary flex items-center space-x-1">
+<span class="material-symbols-outlined text-[16px] text-secondary" data-icon="how_to_reg">how_to_reg</span>
+<span>Automatic token ping broadcasted</span>
+</span>
+<button class="text-label-sm font-label-sm text-primary font-bold hover:underline flex items-center space-x-0.5">
+<span>View OPD Desk</span>
+<span class="material-symbols-outlined text-[14px]" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</article>
+<!-- Alert 3: Queue Alert -->
+<article class="relative bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-space-md shadow-sm transition-all overflow-hidden">
+<div class="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col space-y-1 opacity-30">
+<span class="w-1 h-1 rounded-full bg-outline"></span>
+<span class="w-1 h-1 rounded-full bg-outline"></span>
+<span class="w-1 h-1 rounded-full bg-outline"></span>
+</div>
+<div class="flex items-start justify-between">
+<!-- Amber Tag -->
+<div class="inline-flex items-center space-x-1.5 bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full text-label-sm font-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+<span>QUEUE DELAY</span>
+</div>
+<!-- Timestamp -->
+<div class="flex items-center space-x-1 text-tertiary font-label-sm text-label-sm pr-3">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span>
+<span>32 mins ago</span>
+</div>
+</div>
+<div class="mt-space-sm pr-3">
+<p class="text-body-md font-body-md text-on-surface leading-snug">
+<strong class="text-on-surface">OPD Delay Alert:</strong> Dr. Priya Nair (Pediatrics) running <span class="text-amber-800 font-semibold underline decoration-amber-300">25 mins behind schedule</span> due to neonatal case review.
+          </p>
+</div>
+<div class="mt-3 flex items-center justify-between text-body-sm font-body-sm text-on-surface-variant bg-surface-container-low px-2.5 py-1.5 rounded-lg">
+<div class="flex items-center space-x-1.5">
+<span class="material-symbols-outlined text-[16px] text-outline" data-icon="hourglass_top">hourglass_top</span>
+<span>Impact: 8 Pending Appointments</span>
+</div>
+<button class="text-label-sm font-label-sm text-primary font-bold hover:underline">
+            Re-route Flow
+          </button>
+</div>
+</article>
+<!-- Alert 4: Lab Result Ready -->
+<article class="relative bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-space-md shadow-sm transition-all overflow-hidden">
+<div class="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col space-y-1 opacity-30">
+<span class="w-1 h-1 rounded-full bg-outline"></span>
+<span class="w-1 h-1 rounded-full bg-outline"></span>
+<span class="w-1 h-1 rounded-full bg-outline"></span>
+</div>
+<div class="flex items-start justify-between">
+<!-- Teal Badge -->
+<div class="inline-flex items-center space-x-1.5 bg-primary-fixed text-on-primary-fixed-variant px-2.5 py-0.5 rounded-full text-label-sm font-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>LAB RESULT READY</span>
+</div>
+<!-- Timestamp -->
+<div class="flex items-center space-x-1 text-tertiary font-label-sm text-label-sm pr-3">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span>
+<span>1 hour ago</span>
+</div>
+</div>
+<div class="mt-space-sm pr-3">
+<p class="text-body-md font-body-md text-on-surface leading-snug">
+            Stat Bio-Chemistry Lab report released for <span class="font-semibold text-primary">UHID-90214</span> (Rajesh Gupta) — HbA1c & Troponin.
+          </p>
+</div>
+<div class="mt-3 flex items-center justify-between">
+<span class="inline-flex items-center text-body-sm font-body-sm text-secondary font-medium">
+<span class="material-symbols-outlined text-[16px] mr-1 text-secondary" data-icon="verified">verified</span>
+            Validated by Chief Pathologist
+          </span>
+<button class="text-label-sm font-label-sm text-primary font-bold hover:underline flex items-center">
+<span>View PDF Report</span>
+<span class="material-symbols-outlined text-[14px] ml-0.5" data-icon="open_in_new">open_in_new</span>
+</button>
+</div>
+</article>
+<!-- Alert 5: Appointment Rescheduled -->
+<article class="relative bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-space-md shadow-sm transition-all overflow-hidden opacity-95">
+<div class="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col space-y-1 opacity-30">
+<span class="w-1 h-1 rounded-full bg-outline"></span>
+<span class="w-1 h-1 rounded-full bg-outline"></span>
+<span class="w-1 h-1 rounded-full bg-outline"></span>
+</div>
+<div class="flex items-start justify-between">
+<!-- Grey Badge -->
+<div class="inline-flex items-center space-x-1.5 bg-surface-container-highest text-on-surface-variant px-2.5 py-0.5 rounded-full text-label-sm font-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+<span>SCHEDULE RESCHEDULED</span>
+</div>
+<!-- Timestamp -->
+<div class="flex items-center space-x-1 text-tertiary font-label-sm text-label-sm pr-3">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span>
+<span>2 hours ago</span>
+</div>
+</div>
+<div class="mt-space-sm pr-3">
+<p class="text-body-md font-body-md text-on-surface leading-snug">
+            Patient <strong>Sunita Verma</strong> token moved from <span class="line-through text-outline">10:20 AM</span> to <span class="font-semibold text-on-surface">10:40 AM</span>.
+          </p>
+</div>
+<div class="mt-2 text-body-sm font-body-sm text-tertiary">
+          Slot re-allocation confirmed via Patient WhatsApp dispatch.
+        </div>
+</article>
+</div>
+</main>
+<!-- Bottom Navigation Bar (Shared Component Anchor) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-space-xs py-space-xs bg-surface-container-lowest dark:bg-inverse-surface shadow-md dark:shadow-none">
+<!-- Tab: Home -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-space-xs py-space-xs transition-colors hover:text-primary" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="home">home</span>
+<span class="text-label-sm font-label-sm mt-0.5">Home</span>
+</a>
+<!-- Tab: Queue -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-space-xs py-space-xs transition-colors hover:text-primary" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="calendar_today">calendar_today</span>
+<span class="text-label-sm font-label-sm mt-0.5">Queue</span>
+</a>
+<!-- Tab: EHR -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-space-xs py-space-xs transition-colors hover:text-primary" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="clinical_notes">clinical_notes</span>
+<span class="text-label-sm font-label-sm mt-0.5">EHR</span>
+</a>
+<!-- Tab: Alerts (ACTIVE - Strict Match for Notifications/Alerts Center) -->
+<a aria-current="page" class="flex flex-col items-center justify-center bg-primary dark:bg-primary-container text-on-primary dark:text-on-primary-container rounded-full px-space-sm py-space-xs shadow-sm" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="notifications" data-weight="fill" style="font-variation-settings: 'FILL' 1;">notifications</span>
+<span class="text-label-sm font-label-sm mt-0.5">Alerts</span>
+</a>
+<!-- Tab: Profile -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-space-xs py-space-xs transition-colors hover:text-primary" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="account_circle">account_circle</span>
+<span class="text-label-sm font-label-sm mt-0.5">Profile</span>
+</a>
+</nav>
+</body></html>
