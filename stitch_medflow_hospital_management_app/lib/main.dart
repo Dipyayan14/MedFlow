@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'core/theme/app_theme.dart';
 import 'core/state/medflow_state.dart';
 import 'features/navigation/medflow_navigation_shell.dart';
+import 'features/splash/splash_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,7 +39,7 @@ class _MedFlowAppState extends State<MedFlowApp> {
         title: 'MedFlow - Hospital Management App',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        home: const MedFlowNavigationShell(),
+        home: const SplashScreen(next: MedFlowNavigationShell()),
       ),
     );
   }
