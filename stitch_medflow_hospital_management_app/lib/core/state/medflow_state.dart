@@ -436,6 +436,14 @@ class MedFlowState extends ChangeNotifier {
 
   int get unreadAlertsCount => _alerts.where((a) => !a.isRead).length;
 
+  bool _notificationsEnabled = true;
+  bool get notificationsEnabled => _notificationsEnabled;
+
+  void setNotificationsEnabled(bool v) {
+    _notificationsEnabled = v;
+    notifyListeners();
+  }
+
   void markAllAlertsRead() {
     _alerts = _alerts.map((a) => a.copyWith(isRead: true)).toList();
     notifyListeners();

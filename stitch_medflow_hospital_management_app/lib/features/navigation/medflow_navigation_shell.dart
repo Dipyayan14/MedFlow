@@ -191,7 +191,7 @@ class _MedFlowNavigationShellState extends State<MedFlowNavigationShell> {
             icon: Stack(
               children: [
                 const Icon(Icons.notifications_outlined),
-                if (state.unreadAlertsCount > 0)
+                if (state.unreadAlertsCount > 0 && state.notificationsEnabled)
                   Positioned(
                     right: 0,
                     top: 0,

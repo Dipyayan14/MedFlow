@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../state/medflow_state.dart';
+import 'bell_button.dart';
 import 'emergency_dialog.dart';
 
 class MedFlowTopAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -142,28 +143,13 @@ class MedFlowTopAppBar extends StatelessWidget implements PreferredSizeWidget {
                     onPressed: () => showEmergencyEscalationDialog(context),
                   ),
 
-                  // Notifications Bell with live unread badge
-                  Stack(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.notifications_none, color: AppColors.tertiarySlate),
-                        tooltip: 'Notifications',
-                        onPressed: onNotificationsTap,
-                      ),
-                      if (state.unreadAlertsCount > 0)
-                        Positioned(
-                          right: 8,
-                          top: 8,
-                          child: Container(
-                            width: 9,
-                            height: 9,
-                            decoration: const BoxDecoration(
-                              color: AppColors.errorCrimson,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ),
-                    ],
+                  // Notifications Bell with physics animation
+                  BellButton(
+                    hasUnread: state.unreadAlertsCount > 0,
+                    subscribed: state.notificationsEnabled,
+                    onSubscribedChanged: state.setNotificationsEnabled,
+                    onTap: onNotificationsTap,
+                    color: AppColors.tertiarySlate,
                   ),
                 ],
               ),
