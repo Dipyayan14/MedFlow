@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../core/config/app_config.dart';
+import '../features/patients/models/patient.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:8000/api';
+  static String get baseUrl => AppConfig.apiBaseUrl;
 
   // Log in an existing staff member
   static Future<Map<String, dynamic>> login({
@@ -175,6 +177,126 @@ class ApiService {
       return null;
     } catch (_) {
       return null;
+    }
+  }
+
+  // --- Patient Management ---
+
+  static Future<PaginatedPatients> getPatients({
+    required String token,
+    String? search,
+    int page = 1,
+    int perPage = 15,
+  }) async {
+    final queryParams = <String, String>{
+      'page': page.toString(),
+      'per_page': perPage.toString(),
+    };
+    if (search != null && search.trim().isNotEmpty) {
+      queryParams['search'] = search.trim();
+    }
+
+    final uri = Uri.parse('$baseUrl/patients').replace(queryParameters: queryParams);
+    final response = await http.get(
+      uri,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return PaginatedPatients.fromJson(data);
+    } else {
+      final body = jsonDecode(response.body);
+      throw Exception(body['message'] ?? 'Failed to load patients (${response.statusCode})');
+    }
+  }
+
+  static Future<Patient> getPatient({
+    required String token,
+    required int id,
+  }) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/patients/$id'),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return Patient.fromJson(data['patient']);
+    } else {
+      final body = jsonDecode(response.body);
+      throw Exception(body['message'] ?? 'Failed to load patient (${response.statusCode})');
+    }
+  }
+
+  static Future<Patient> createPatient({
+    required String token,
+    required Map<String, dynamic> data,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/patients'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(data),
+    );
+
+    if (response.statusCode == 201) {
+      final res = jsonDecode(response.body) as Map<String, dynamic>;
+      return Patient.fromJson(res['patient']);
+    } else {
+      final body = jsonDecode(response.body);
+      throw Exception(body['message'] ?? 'Failed to create patient (${response.statusCode})');
+    }
+  }
+
+  static Future<Patient> updatePatient({
+    required String token,
+    required int id,
+    required Map<String, dynamic> data,
+  }) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/patients/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(data),
+    );
+
+    if (response.statusCode == 200) {
+      final res = jsonDecode(response.body) as Map<String, dynamic>;
+      return Patient.fromJson(res['patient']);
+    } else {
+      final body = jsonDecode(response.body);
+      throw Exception(body['message'] ?? 'Failed to update patient (${response.statusCode})');
+    }
+  }
+
+  static Future<void> deletePatient({
+    required String token,
+    required int id,
+  }) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/patients/$id'),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      final body = jsonDecode(response.body);
+      throw Exception(body['message'] ?? 'Failed to delete patient (${response.statusCode})');
     }
   }
 }

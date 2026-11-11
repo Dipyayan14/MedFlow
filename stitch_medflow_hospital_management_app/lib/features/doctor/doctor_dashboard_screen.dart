@@ -3,8 +3,9 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/state/medflow_state.dart';
+import '../patients/screens/patients_list_screen.dart';
 
-class DoctorDashboardScreen extends StatelessWidget {
+class DoctorDashboardScreen extends StatefulWidget {
   final VoidCallback onOpenEhr;
   final VoidCallback onOpenNotifications;
 
@@ -15,6 +16,22 @@ class DoctorDashboardScreen extends StatelessWidget {
   });
 
   @override
+  State<DoctorDashboardScreen> createState() => _DoctorDashboardScreenState();
+}
+
+class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = MedFlowScope.of(context);
+      if (state.authToken != null) {
+        state.fetchPatientsFromApi(state.authToken!);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final state = MedFlowScope.of(context);
     final currentPatient = state.currentInClinic;
@@ -23,11 +40,18 @@ class DoctorDashboardScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
+        child: RefreshIndicator(
+          onRefresh: () async {
+            if (state.authToken != null) {
+              await state.fetchPatientsFromApi(state.authToken!);
+            }
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -227,24 +251,152 @@ class DoctorDashboardScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          'Live Telemetry',
-                          style: AppTypography.labelSm.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w700,
+                      Row(
+                        children: [
+                          InkWell(
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const PatientsListScreen()),
+                              );
+                            },
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryContainer.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.people_outline, size: 14, color: AppColors.primary),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Patients (${state.apiPatients.length})',
+                                    style: AppTypography.labelSm.copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              'Live Telemetry',
+                              style: AppTypography.labelSm.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
 
                   const SizedBox(height: 12),
+
+                  // Loading State
+                  if (state.isLoadingPatients)
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceContainerLowest,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.borderSubtle),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          SizedBox(width: 12),
+                          Text('Syncing live patient queue from server...'),
+                        ],
+                      ),
+                    ),
+
+                  // Error State
+                  if (state.patientsError != null && !state.isLoadingPatients)
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.errorCrimson.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.errorCrimson.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline, color: AppColors.errorCrimson, size: 20),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              state.patientsError!,
+                              style: AppTypography.bodySm.copyWith(color: AppColors.errorCrimson),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              if (state.authToken != null) {
+                                state.fetchPatientsFromApi(state.authToken!);
+                              }
+                            },
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  // Empty State
+                  if (!state.isLoadingPatients && state.queue.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceContainerLowest,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.borderSubtle),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(Icons.inbox_outlined, size: 48, color: AppColors.tertiary.withValues(alpha: 0.6)),
+                          const SizedBox(height: 12),
+                          Text(
+                            'No Patients in Consultation Queue',
+                            style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'When reception issues OPD slips or books appointments, patient records will arrive here.',
+                            textAlign: TextAlign.center,
+                            style: AppTypography.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+                          ),
+                          const SizedBox(height: 12),
+                          OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const PatientsListScreen()),
+                              );
+                            },
+                            icon: const Icon(Icons.people_outline, size: 18),
+                            label: const Text('Open Patient Directory'),
+                          ),
+                        ],
+                      ),
+                    ),
 
                   // CURRENT IN CLINIC (Active Focused Card)
                   if (currentPatient != null)
@@ -419,7 +571,7 @@ class DoctorDashboardScreen extends StatelessWidget {
                                   children: [
                                     Expanded(
                                       child: OutlinedButton(
-                                        onPressed: onOpenEhr,
+                                        onPressed: widget.onOpenEhr,
                                         style: OutlinedButton.styleFrom(
                                           backgroundColor: AppColors.surfaceContainerHigh,
                                           side: BorderSide.none,
@@ -718,6 +870,7 @@ class DoctorDashboardScreen extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
   String _getInitials(String? name) {

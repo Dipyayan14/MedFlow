@@ -4,6 +4,11 @@ import '../../core/theme/app_typography.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/state/medflow_state.dart';
 import '../../core/widgets/status_pill.dart';
+import '../../services/api_service.dart';
+import '../patients/models/patient.dart';
+import '../patients/screens/patients_list_screen.dart';
+import '../patients/screens/patient_detail_screen.dart';
+import '../patients/screens/patient_form_screen.dart';
 
 class ReceptionistDashboardScreen extends StatefulWidget {
   final VoidCallback onBookAppointment;
@@ -21,6 +26,48 @@ class _ReceptionistDashboardScreenState extends State<ReceptionistDashboardScree
   String _selectedSpecialization = 'All';
   final TextEditingController _searchController = TextEditingController();
   bool _showLiveToast = true;
+
+  List<Patient> _patients = [];
+  bool _isLoadingPatients = false;
+  String? _patientsError;
+  int _totalPatientsCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchPatients();
+    });
+  }
+
+  Future<void> _fetchPatients() async {
+    final state = MedFlowScope.of(context);
+    final token = state.authToken;
+    if (token == null) return;
+
+    setState(() {
+      _isLoadingPatients = true;
+      _patientsError = null;
+    });
+
+    try {
+      final res = await ApiService.getPatients(token: token, perPage: 6);
+      if (mounted) {
+        setState(() {
+          _patients = res.data;
+          _totalPatientsCount = res.total;
+          _isLoadingPatients = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingPatients = false;
+          _patientsError = e.toString().replaceFirst('Exception: ', '');
+        });
+      }
+    }
+  }
 
   final List<Map<String, dynamic>> _filterChips = [
     {'label': 'All', 'count': 28},
@@ -161,6 +208,232 @@ class _ReceptionistDashboardScreenState extends State<ReceptionistDashboardScree
                       ),
                     ),
                   ],
+
+                  const SizedBox(height: 12),
+
+                  // Real-Time Patients Module Card
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceContainerLowest,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.borderSubtle),
+                      boxShadow: AppTheme.cardShadow,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.people_alt_outlined, size: 20, color: AppColors.primary),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Patients Directory',
+                                  style: AppTypography.headlineSm.copyWith(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.onSurface,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    '$_totalPatientsCount Records',
+                                    style: AppTypography.labelSm.copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                TextButton.icon(
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  icon: const Icon(Icons.add, size: 16),
+                                  label: const Text('Register', style: TextStyle(fontSize: 12)),
+                                  onPressed: () async {
+                                    final added = await Navigator.of(context).push<bool>(
+                                      MaterialPageRoute(builder: (_) => const PatientFormScreen()),
+                                    );
+                                    if (added == true) {
+                                      _fetchPatients();
+                                    }
+                                  },
+                                ),
+                                const SizedBox(width: 6),
+                                OutlinedButton(
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    side: BorderSide(color: AppColors.primary.withValues(alpha: 0.4)),
+                                  ),
+                                  onPressed: () async {
+                                    await Navigator.of(context).push(
+                                      MaterialPageRoute(builder: (_) => const PatientsListScreen()),
+                                    );
+                                    _fetchPatients();
+                                  },
+                                  child: const Text('View All', style: TextStyle(fontSize: 12)),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        // Loading state
+                        if (_isLoadingPatients)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: Center(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text('Loading registered patients...', style: TextStyle(fontSize: 12)),
+                                ],
+                              ),
+                            ),
+                          )
+                        // Error state
+                        else if (_patientsError != null)
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.errorCrimson.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.error_outline, size: 16, color: AppColors.errorCrimson),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    _patientsError!,
+                                    style: const TextStyle(fontSize: 11, color: AppColors.errorCrimson),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: _fetchPatients,
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: Size.zero,
+                                  ),
+                                  child: const Text('Retry', style: TextStyle(fontSize: 11)),
+                                ),
+                              ],
+                            ),
+                          )
+                        // Empty state
+                        else if (_patients.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.info_outline, size: 16, color: AppColors.tertiary),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'No patients registered in the hospital database yet.',
+                                  style: AppTypography.bodySm.copyWith(
+                                    color: AppColors.onSurfaceVariant,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        // Loaded patients preview
+                        else
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: _patients.map((p) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(10),
+                                    onTap: () async {
+                                      await Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => PatientDetailScreen(patientId: p.id),
+                                        ),
+                                      );
+                                      _fetchPatients();
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surface,
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(color: AppColors.borderSubtle),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 12,
+                                            backgroundColor: AppColors.primaryContainer.withValues(alpha: 0.3),
+                                            child: Text(
+                                              p.name.isNotEmpty ? p.name[0] : 'P',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.primary,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                p.name,
+                                                style: AppTypography.labelMd.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                              Text(
+                                                '${p.mrn} • ${p.calculatedAge}y',
+                                                style: AppTypography.bodySm.copyWith(
+                                                  fontSize: 10,
+                                                  color: AppColors.onSurfaceVariant,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
 
                   const SizedBox(height: 14),
 
@@ -522,51 +795,88 @@ class _ReceptionistDashboardScreenState extends State<ReceptionistDashboardScree
   }
 
   void _showQuickTokenDialog(BuildContext context, PhysicianRoster doc) {
-    final nameController = TextEditingController(text: 'Walk-in Patient');
+    String? selectedPatientName = _patients.isNotEmpty ? _patients.first.name : null;
+    final nameController = TextEditingController(text: selectedPatientName ?? 'Walk-in Patient');
+
     showDialog(
       context: context,
       builder: (ctx) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text('Issue Quick OPD Token', style: AppTypography.headlineSm),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Doctor: ${doc.name} (${doc.room})', style: AppTypography.bodyMd),
-              const SizedBox(height: 12),
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Patient Full Name',
-                  hintText: 'Enter patient name',
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final patientName = nameController.text.trim();
-                MedFlowScope.of(context).issueQuickToken(
-                  doc.id,
-                  patientName.isEmpty ? 'Walk-in Patient' : patientName,
-                );
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    backgroundColor: AppColors.primary,
-                    content: Text('OPD Slip Generated for ${doc.name}'),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: Text('Issue Quick OPD Token', style: AppTypography.headlineSm),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Doctor: ${doc.name} (${doc.room})', style: AppTypography.bodyMd),
+                  const SizedBox(height: 12),
+                  if (_patients.isNotEmpty) ...[
+                    DropdownButtonFormField<String>(
+                      initialValue: selectedPatientName,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Select Registered Patient',
+                        prefixIcon: Icon(Icons.person_search_outlined),
+                      ),
+                      items: [
+                        ..._patients.map((p) => DropdownMenuItem(
+                              value: p.name,
+                              child: Text('${p.name} (${p.mrn})', overflow: TextOverflow.ellipsis),
+                            )),
+                        const DropdownMenuItem(
+                          value: 'custom',
+                          child: Text('+ Enter Custom / Walk-in Name'),
+                        ),
+                      ],
+                      onChanged: (val) {
+                        setDialogState(() {
+                          selectedPatientName = val;
+                          if (val != null && val != 'custom') {
+                            nameController.text = val;
+                          } else {
+                            nameController.text = '';
+                          }
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Patient Full Name',
+                      hintText: 'Enter patient name',
+                    ),
                   ),
-                );
-              },
-              child: const Text('Generate Token'),
-            ),
-          ],
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final patientName = nameController.text.trim();
+                    MedFlowScope.of(context).issueQuickToken(
+                      doc.id,
+                      patientName.isEmpty ? 'Walk-in Patient' : patientName,
+                    );
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        backgroundColor: AppColors.primary,
+                        content: Text('OPD Slip Generated for ${doc.name}'),
+                      ),
+                    );
+                  },
+                  child: const Text('Generate Token'),
+                ),
+              ],
+            );
+          },
         );
       },
     );

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../services/api_service.dart';
+import '../../features/patients/models/patient.dart';
 
 enum UserRole {
   receptionist('Receptionist', 'Front Desk & Triage', Icons.badge_outlined),
@@ -277,6 +279,57 @@ class MedFlowState extends ChangeNotifier {
   ];
 
   List<PatientToken> get queue => List.unmodifiable(_queue);
+
+  bool _isLoadingPatients = false;
+  bool get isLoadingPatients => _isLoadingPatients;
+
+  String? _patientsError;
+  String? get patientsError => _patientsError;
+
+  List<Patient> _apiPatients = [];
+  List<Patient> get apiPatients => List.unmodifiable(_apiPatients);
+
+  Future<void> fetchPatientsFromApi(String token) async {
+    _isLoadingPatients = true;
+    _patientsError = null;
+    notifyListeners();
+
+    try {
+      final res = await ApiService.getPatients(token: token, perPage: 20);
+      _apiPatients = res.data;
+      _isLoadingPatients = false;
+
+      // Populate queue with real patient data from API
+      _queue.clear();
+      for (int i = 0; i < _apiPatients.length; i++) {
+        final p = _apiPatients[i];
+        final genderStr = p.gender.isEmpty
+            ? 'Other'
+            : (p.gender[0].toUpperCase() + p.gender.substring(1));
+        _queue.add(
+          PatientToken(
+            tokenNumber: 20 + i,
+            name: p.name,
+            age: p.calculatedAge,
+            gender: genderStr,
+            uhid: p.mrn,
+            complaint: 'OPD Consultation & Clinical Review',
+            bp: '125 / 82 mmHg',
+            pulse: 76,
+            spo2: 98,
+            waitingLocation: i == 0 ? 'Consultation Room 204' : 'Waiting in Bay ${((i % 3) + 1)}A',
+            arrivalTime: '${(i + 1) * 8}m ago',
+            isInClinic: i == 0,
+          ),
+        );
+      }
+      notifyListeners();
+    } catch (e) {
+      _isLoadingPatients = false;
+      _patientsError = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+    }
+  }
 
   PatientToken? get currentInClinic =>
       _queue.cast<PatientToken?>().firstWhere((p) => p?.isInClinic == true, orElse: () => null);

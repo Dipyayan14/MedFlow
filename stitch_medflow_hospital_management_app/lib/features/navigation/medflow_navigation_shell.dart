@@ -13,6 +13,7 @@ import '../ehr/patient_ehr_screen.dart';
 import '../auth/role_selector_screen.dart';
 import '../auth/register_screen.dart';
 import '../auth/forgot_password_screen.dart';
+import '../patients/screens/patients_list_screen.dart';
 import '../../services/api_service.dart';
 
 class MedFlowNavigationShell extends StatefulWidget {
@@ -211,9 +212,13 @@ class _MedFlowNavigationShellState extends State<MedFlowNavigationShell> {
       }
     }
 
+    final userRole = state.currentUser?.role;
+    final canViewPatients = userRole == 'admin' || userRole == 'doctor' || userRole == 'nurse' || userRole == 'duty_desk';
+
     return Scaffold(
       appBar: MedFlowTopAppBar(
         onNotificationsTap: () => setState(() => _currentIndex = 4),
+        onPatientsTap: canViewPatients ? _navigateToPatientsList : null,
         onRoleTap: _showRoleSwitchSheet,
       ),
       body: IndexedStack(
@@ -239,6 +244,12 @@ class _MedFlowNavigationShellState extends State<MedFlowNavigationShell> {
   void _navigateToEhr() {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const PatientEhrScreen()),
+    );
+  }
+
+  void _navigateToPatientsList() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const PatientsListScreen()),
     );
   }
 

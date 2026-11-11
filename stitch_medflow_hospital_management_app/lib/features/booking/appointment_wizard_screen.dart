@@ -47,6 +47,7 @@ class _AppointmentWizardScreenState extends State<AppointmentWizardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final state = MedFlowScope.of(context);
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
@@ -446,12 +447,12 @@ class _AppointmentWizardScreenState extends State<AppointmentWizardScreen> {
                                 children: [
                                   Expanded(
                                     child: ChoiceChip(
-                                      label: const Text('Self (Rajesh Gupta)'),
+                                      label: Text('Self (${state.currentUser?.name ?? "Staff"})'),
                                       selected: _isSelfBooking,
                                       onSelected: (val) {
                                         setState(() {
                                           _isSelfBooking = true;
-                                          _patientNameController.text = 'Rajesh Gupta';
+                                          _patientNameController.text = state.currentUser?.name ?? '';
                                         });
                                       },
                                     ),
@@ -641,7 +642,8 @@ class _AppointmentWizardScreenState extends State<AppointmentWizardScreen> {
 
   void _confirmAndGenerateToken(BuildContext context) {
     final state = MedFlowScope.of(context);
-    final patientName = _patientNameController.text.trim().isEmpty ? 'Rajesh Gupta' : _patientNameController.text.trim();
+    final defaultName = state.currentUser?.name ?? 'Walk-in Patient';
+    final patientName = _patientNameController.text.trim().isEmpty ? defaultName : _patientNameController.text.trim();
     final newTokenNum = state.queue.isNotEmpty ? state.queue.last.tokenNumber + 1 : 24;
 
     state.addPatientToken(

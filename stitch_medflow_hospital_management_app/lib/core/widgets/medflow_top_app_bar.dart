@@ -9,6 +9,7 @@ class MedFlowTopAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? subtitle;
   final Widget? leading;
   final VoidCallback? onNotificationsTap;
+  final VoidCallback? onPatientsTap;
   final VoidCallback? onRoleTap;
   final bool showRoleBadge;
 
@@ -17,6 +18,7 @@ class MedFlowTopAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.subtitle,
     this.leading,
     this.onNotificationsTap,
+    this.onPatientsTap,
     this.onRoleTap,
     this.showRoleBadge = true,
   });
@@ -142,6 +144,14 @@ class MedFlowTopAppBar extends StatelessWidget implements PreferredSizeWidget {
                     tooltip: 'Emergency Code Blue',
                     onPressed: () => showEmergencyEscalationDialog(context),
                   ),
+
+                  // Patients Directory Button
+                  if (onPatientsTap != null)
+                    IconButton(
+                      icon: const Icon(Icons.people_alt_outlined, color: AppColors.primary),
+                      tooltip: 'Patients Directory',
+                      onPressed: onPatientsTap,
+                    ),
 
                   // Notifications Bell with physics animation
                   BellButton(
