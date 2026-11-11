@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PatientController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -17,6 +18,23 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+
+    // Patients module
+    // View: doctor, nurse, duty_desk, admin
+    Route::get('/patients', [PatientController::class, 'index'])
+        ->middleware('role:doctor,nurse,duty_desk,admin');
+    Route::get('/patients/{patient}', [PatientController::class, 'show'])
+        ->middleware('role:doctor,nurse,duty_desk,admin');
+
+    // Create & Update: duty_desk, admin
+    Route::post('/patients', [PatientController::class, 'store'])
+        ->middleware('role:duty_desk,admin');
+    Route::match(['put', 'patch'], '/patients/{patient}', [PatientController::class, 'update'])
+        ->middleware('role:duty_desk,admin');
+
+    // Delete: admin only
+    Route::delete('/patients/{patient}', [PatientController::class, 'destroy'])
+        ->middleware('role:admin');
 
     // Admin-only routes
     Route::middleware('role:admin')->prefix('admin')->group(function () {
