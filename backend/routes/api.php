@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\OpdQueueController;
 use App\Http\Controllers\PatientController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -55,6 +56,28 @@ Route::middleware('auth:sanctum')->group(function () {
     // Delete: admin only
     Route::delete('/appointments/{appointment}', [AppointmentController::class, 'destroy'])
         ->middleware('role:admin');
+
+    // OPD Queue module
+    // 1. GET /api/opd/queue?date=YYYY-MM-DD&doctor_id=...
+    Route::get('/opd/queue', [OpdQueueController::class, 'queue'])
+        ->middleware('role:doctor,nurse,duty_desk,admin');
+
+    // 2. Check-in patient (issues token number). Role: duty_desk, nurse, admin
+    Route::post('/opd/check-in', [OpdQueueController::class, 'checkIn'])
+        ->middleware('role:duty_desk,nurse,admin');
+    Route::post('/appointments/{appointment}/check-in', [OpdQueueController::class, 'checkIn'])
+        ->middleware('role:duty_desk,nurse,admin');
+
+    // 3. Call-next and Complete: Role: assigned doctor only
+    Route::post('/opd/call-next', [OpdQueueController::class, 'callNext'])
+        ->middleware('role:doctor');
+    Route::post('/appointments/{appointment}/call-next', [OpdQueueController::class, 'callNext'])
+        ->middleware('role:doctor');
+
+    Route::post('/opd/complete', [OpdQueueController::class, 'complete'])
+        ->middleware('role:doctor');
+    Route::post('/appointments/{appointment}/complete', [OpdQueueController::class, 'complete'])
+        ->middleware('role:doctor');
 
     // Admin-only routes
     Route::middleware('role:admin')->prefix('admin')->group(function () {

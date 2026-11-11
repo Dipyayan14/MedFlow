@@ -76,5 +76,17 @@ class Appointment extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
+    /**
+     * Hide sensitive notes unless user is admin or the assigned doctor.
+     */
+    public function sanitizeForUser(?User $user): self
+    {
+        if (! $user || ($user->role !== 'admin' && ! ($user->role === 'doctor' && $this->doctor_id === $user->id))) {
+            $this->makeHidden('notes');
+        }
+
+        return $this;
+    }
 }
 

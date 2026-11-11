@@ -30,47 +30,43 @@ class UpdateAppointmentRequest extends FormRequest
         $isDutyDesk = ($user->role === 'duty_desk');
         $isNurse = ($user->role === 'nurse');
 
-        // Rule: Reschedule (duty_desk and admin only)
-        if ($this->has('scheduled_at')) {
-            if (! ($isDutyDesk || $isAdmin)) {
-                throw new AuthorizationException('Only duty desk and admin can reschedule appointments.');
+        $requestedFields = array_keys($this->except(['_method', '_token']));
+
+        if (empty($requestedFields)) {
+            return true;
+        }
+
+        $allowedFields = [];
+        if ($isAdmin || $isDutyDesk) {
+            $allowedFields = ['scheduled_at', 'reason', 'status'];
+        } elseif ($isNurse) {
+            $allowedFields = ['status'];
+        } elseif ($isAssignedDoctor) {
+            $allowedFields = ['notes', 'status'];
+        }
+
+        // Reject if any field is not allowed for this role, or if user has no update permissions
+        foreach ($requestedFields as $field) {
+            if (! in_array($field, $allowedFields, true)) {
+                throw new AuthorizationException("Forbidden: You are not authorized to modify the '{$field}' field.");
             }
         }
 
-        // Rule: Reason (duty_desk and admin only)
-        if ($this->has('reason')) {
-            if (! ($isDutyDesk || $isAdmin)) {
-                throw new AuthorizationException('Only duty desk and admin can update appointment reasons.');
-            }
-        }
-
-        // Rule: Notes (assigned doctor only)
-        if ($this->has('notes')) {
-            if (! $isAssignedDoctor) {
-                throw new AuthorizationException('Only the assigned doctor can write appointment notes.');
-            }
-        }
-
-        // Rule: Status transitions
+        // Validate permitted status values per role
         if ($this->has('status')) {
             $status = $this->input('status');
 
-            if ($status === Appointment::STATUS_CANCELLED) {
-                if (! ($isDutyDesk || $isAdmin)) {
-                    throw new AuthorizationException('Only duty desk and admin can cancel appointments.');
+            if ($isAssignedDoctor) {
+                if (! in_array($status, [Appointment::STATUS_IN_CONSULTATION, Appointment::STATUS_COMPLETED], true)) {
+                    throw new AuthorizationException("Forbidden: Assigned doctor cannot transition status to '{$status}'.");
                 }
-            } elseif ($status === Appointment::STATUS_CHECKED_IN) {
-                if (! ($isDutyDesk || $isNurse || $isAdmin)) {
-                    throw new AuthorizationException('Only duty desk, nurse, and admin can check in patients.');
+            } elseif ($isAdmin || $isDutyDesk) {
+                if (! in_array($status, [Appointment::STATUS_CANCELLED, Appointment::STATUS_CHECKED_IN], true)) {
+                    throw new AuthorizationException("Forbidden: Duty desk and admin cannot transition status to '{$status}'.");
                 }
-            } elseif (in_array($status, [Appointment::STATUS_IN_CONSULTATION, Appointment::STATUS_COMPLETED], true)) {
-                if (! $isAssignedDoctor) {
-                    throw new AuthorizationException('Only the assigned doctor can start or complete consultations.');
-                }
-            } else {
-                // Any other status change requires duty_desk or admin
-                if (! ($isDutyDesk || $isAdmin)) {
-                    throw new AuthorizationException('You are not authorized to update this appointment status.');
+            } elseif ($isNurse) {
+                if ($status !== Appointment::STATUS_CHECKED_IN) {
+                    throw new AuthorizationException("Forbidden: Nurses can only transition status to 'checked_in'.");
                 }
             }
         }
@@ -117,13 +113,20 @@ class UpdateAppointmentRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            if ($this->filled('scheduled_at') && ! $validator->errors()->has('scheduled_at')) {
-                $appointment = $this->route('appointment');
-                if (! $appointment instanceof Appointment) {
-                    $appointment = Appointment::find($appointment);
+            $appointment = $this->route('appointment');
+            if (! $appointment instanceof Appointment) {
+                $appointment = Appointment::find($appointment);
+            }
+
+            if ($appointment) {
+                if ($this->input('status') === Appointment::STATUS_COMPLETED && $appointment->status !== Appointment::STATUS_IN_CONSULTATION) {
+                    $validator->errors()->add(
+                        'status',
+                        'Status order violation: Cannot complete an appointment before it is in consultation.'
+                    );
                 }
 
-                if ($appointment) {
+                if ($this->filled('scheduled_at') && ! $validator->errors()->has('scheduled_at')) {
                     $scheduledAt = Carbon::parse($this->input('scheduled_at'))->toDateTimeString();
 
                     $conflictExists = Appointment::where('doctor_id', $appointment->doctor_id)
@@ -154,4 +157,3 @@ class UpdateAppointmentRequest extends FormRequest
         ];
     }
 }
-

@@ -47,6 +47,7 @@ class AppointmentController extends Controller
 
         $perPage = max(1, min((int) $request->query('per_page', 15), 100));
         $appointments = $query->orderBy('scheduled_at', 'asc')->paginate($perPage);
+        $appointments->getCollection()->each(fn ($a) => $a->sanitizeForUser($user));
 
         return response()->json($appointments);
     }
@@ -61,14 +62,16 @@ class AppointmentController extends Controller
         $validated['status'] = Appointment::STATUS_SCHEDULED;
 
         $appointment = Appointment::create($validated);
+        $appointment->load([
+            'patient:id,mrn,first_name,last_name,phone,gender,date_of_birth,blood_group',
+            'doctor:id,name,department,specialization',
+            'creator:id,name,role',
+        ]);
+        $appointment->sanitizeForUser($request->user());
 
         return response()->json([
             'message' => 'Appointment booked successfully',
-            'appointment' => $appointment->load([
-                'patient:id,mrn,first_name,last_name,phone,gender,date_of_birth,blood_group',
-                'doctor:id,name,department,specialization',
-                'creator:id,name,role',
-            ]),
+            'appointment' => $appointment,
         ], 201);
     }
 
@@ -84,12 +87,15 @@ class AppointmentController extends Controller
             abort(403, 'Forbidden: You are not authorized to view another doctor\'s appointment.');
         }
 
+        $appointment->load([
+            'patient:id,mrn,first_name,last_name,phone,gender,date_of_birth,blood_group',
+            'doctor:id,name,department,specialization',
+            'creator:id,name,role',
+        ]);
+        $appointment->sanitizeForUser($user);
+
         return response()->json([
-            'appointment' => $appointment->load([
-                'patient:id,mrn,first_name,last_name,phone,gender,date_of_birth,blood_group',
-                'doctor:id,name,department,specialization',
-                'creator:id,name,role',
-            ]),
+            'appointment' => $appointment,
         ]);
     }
 
@@ -99,15 +105,27 @@ class AppointmentController extends Controller
     public function update(UpdateAppointmentRequest $request, Appointment $appointment): JsonResponse
     {
         $validated = $request->validated();
+
+        if (isset($validated['status']) && $validated['status'] === Appointment::STATUS_CHECKED_IN && is_null($appointment->token_number)) {
+            $date = $appointment->scheduled_at->toDateString();
+            $maxToken = Appointment::where('doctor_id', $appointment->doctor_id)
+                ->whereDate('scheduled_at', $date)
+                ->max('token_number') ?? 0;
+            $validated['token_number'] = $maxToken + 1;
+        }
+
         $appointment->update($validated);
+
+        $appointment->load([
+            'patient:id,mrn,first_name,last_name,phone,gender,date_of_birth,blood_group',
+            'doctor:id,name,department,specialization',
+            'creator:id,name,role',
+        ]);
+        $appointment->sanitizeForUser($request->user());
 
         return response()->json([
             'message' => 'Appointment updated successfully',
-            'appointment' => $appointment->load([
-                'patient:id,mrn,first_name,last_name,phone,gender,date_of_birth,blood_group',
-                'doctor:id,name,department,specialization',
-                'creator:id,name,role',
-            ]),
+            'appointment' => $appointment,
         ]);
     }
 

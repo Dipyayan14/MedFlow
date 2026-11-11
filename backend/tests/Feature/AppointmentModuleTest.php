@@ -402,4 +402,94 @@ class AppointmentModuleTest extends TestCase
         $this->assertCount(1, $resStatus->json('data'));
         $this->assertEquals(Appointment::STATUS_COMPLETED, $resStatus->json('data.0.status'));
     }
+
+    public function test_notes_field_is_hidden_from_unauthorized_roles_in_show_and_index(): void
+    {
+        $appt = Appointment::factory()->create([
+            'patient_id' => $this->patient->id,
+            'doctor_id' => $this->doctorA->id,
+            'notes' => 'Highly confidential doctor assessment and prescription.',
+            'created_by' => $this->dutyDesk->id,
+        ]);
+
+        // Assigned doctor A sees notes in show
+        $this->actingAs($this->doctorA, 'sanctum')
+            ->getJson("/api/appointments/{$appt->id}")
+            ->assertStatus(200)
+            ->assertJsonPath('appointment.notes', 'Highly confidential doctor assessment and prescription.');
+
+        // Admin sees notes in show
+        $this->actingAs($this->admin, 'sanctum')
+            ->getJson("/api/appointments/{$appt->id}")
+            ->assertStatus(200)
+            ->assertJsonPath('appointment.notes', 'Highly confidential doctor assessment and prescription.');
+
+        // Nurse DOES NOT see notes in show
+        $nurseShow = $this->actingAs($this->nurse, 'sanctum')
+            ->getJson("/api/appointments/{$appt->id}")
+            ->assertStatus(200);
+        $this->assertArrayNotHasKey('notes', $nurseShow->json('appointment'));
+
+        // Duty desk DOES NOT see notes in show
+        $dutyShow = $this->actingAs($this->dutyDesk, 'sanctum')
+            ->getJson("/api/appointments/{$appt->id}")
+            ->assertStatus(200);
+        $this->assertArrayNotHasKey('notes', $dutyShow->json('appointment'));
+
+        // In index:
+        // Duty desk index response does not have notes
+        $dutyIndex = $this->actingAs($this->dutyDesk, 'sanctum')
+            ->getJson('/api/appointments')
+            ->assertStatus(200);
+        $this->assertArrayNotHasKey('notes', $dutyIndex->json('data.0'));
+
+        // Nurse index response does not have notes
+        $nurseIndex = $this->actingAs($this->nurse, 'sanctum')
+            ->getJson('/api/appointments')
+            ->assertStatus(200);
+        $this->assertArrayNotHasKey('notes', $nurseIndex->json('data.0'));
+
+        // Assigned doctor A index response DOES have notes
+        $docIndex = $this->actingAs($this->doctorA, 'sanctum')
+            ->getJson('/api/appointments')
+            ->assertStatus(200);
+        $this->assertArrayHasKey('notes', $docIndex->json('data.0'));
+        $this->assertEquals('Highly confidential doctor assessment and prescription.', $docIndex->json('data.0.notes'));
+    }
+
+    public function test_update_rejects_mixed_or_unauthorized_fields_with_403(): void
+    {
+        $appt = Appointment::factory()->create([
+            'patient_id' => $this->patient->id,
+            'doctor_id' => $this->doctorA->id,
+            'status' => Appointment::STATUS_SCHEDULED,
+            'created_by' => $this->dutyDesk->id,
+        ]);
+
+        $futureTime = now()->addDays(2)->setHour(14)->setMinute(0)->toDateTimeString();
+
+        // Duty desk attempting to update scheduled_at AND sneak in notes -> 403 Forbidden
+        $this->actingAs($this->dutyDesk, 'sanctum')
+            ->putJson("/api/appointments/{$appt->id}", [
+                'scheduled_at' => $futureTime,
+                'notes' => 'Tampered notes',
+            ])
+            ->assertStatus(403);
+
+        // Nurse attempting to update status AND sneak in reason or scheduled_at -> 403 Forbidden
+        $this->actingAs($this->nurse, 'sanctum')
+            ->putJson("/api/appointments/{$appt->id}", [
+                'status' => Appointment::STATUS_CHECKED_IN,
+                'reason' => 'Changed reason',
+            ])
+            ->assertStatus(403);
+
+        // Doctor attempting to change scheduled_at -> 403 Forbidden
+        $this->actingAs($this->doctorA, 'sanctum')
+            ->putJson("/api/appointments/{$appt->id}", [
+                'scheduled_at' => $futureTime,
+                'notes' => 'Some doctor notes',
+            ])
+            ->assertStatus(403);
+    }
 }
