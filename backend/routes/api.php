@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PatientController;
 use Illuminate\Http\Request;
@@ -34,6 +35,25 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Delete: admin only
     Route::delete('/patients/{patient}', [PatientController::class, 'destroy'])
+        ->middleware('role:admin');
+
+    // Appointments module
+    // View: doctor, nurse, duty_desk, admin
+    Route::get('/appointments', [AppointmentController::class, 'index'])
+        ->middleware('role:doctor,nurse,duty_desk,admin');
+    Route::get('/appointments/{appointment}', [AppointmentController::class, 'show'])
+        ->middleware('role:doctor,nurse,duty_desk,admin');
+
+    // Create: duty_desk, admin
+    Route::post('/appointments', [AppointmentController::class, 'store'])
+        ->middleware('role:duty_desk,admin');
+
+    // Update / Reschedule / Status / Notes: doctor, nurse, duty_desk, admin (granular checks in UpdateAppointmentRequest)
+    Route::match(['put', 'patch'], '/appointments/{appointment}', [AppointmentController::class, 'update'])
+        ->middleware('role:doctor,nurse,duty_desk,admin');
+
+    // Delete: admin only
+    Route::delete('/appointments/{appointment}', [AppointmentController::class, 'destroy'])
         ->middleware('role:admin');
 
     // Admin-only routes
