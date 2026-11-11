@@ -57,3 +57,4 @@ key.properties
 *.pem
 *.p12
 *.pfx
+medflow_session.dat

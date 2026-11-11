@@ -1,0 +1,37 @@
+# Root .gitignore for MedFlow
+
+# Environment & credentials
+backend/.env
+backend/.env.*
+!backend/.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+medflow_session.dat
+**/medflow_session.dat
+
+# Logs
+*.log
+backend/storage/logs/*.log
+
+# Backend dependencies & build
+backend/vendor/
+backend/node_modules/
+backend/public/storage
+backend/public/hot
+backend/public/build
+
+# Flutter dependencies & build
+stitch_medflow_hospital_management_app/build/
+stitch_medflow_hospital_management_app/.dart_tool/
+stitch_medflow_hospital_management_app/.flutter-plugins-dependencies
+stitch_medflow_hospital_management_app/.pub/
+stitch_medflow_hospital_management_app/.pub-cache/
+
+# OS and Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
