@@ -18,7 +18,7 @@ class OpdQueueController extends Controller
     public function queue(Request $request): JsonResponse
     {
         $user = $request->user();
-        $date = $request->query('date', Carbon::today()->toDateString());
+        $date = $request->query('date', Carbon::now('Asia/Kolkata')->format('Y-m-d'));
 
         $query = Appointment::query()
             ->with([
@@ -91,34 +91,7 @@ class OpdQueueController extends Controller
             $appointment = Appointment::findOrFail($validated['appointment_id']);
         }
 
-        if ($appointment->status === Appointment::STATUS_CANCELLED) {
-            return response()->json([
-                'message' => 'Cannot check in a cancelled appointment.',
-            ], 422);
-        }
-
-        if ($appointment->status === Appointment::STATUS_COMPLETED) {
-            return response()->json([
-                'message' => 'Cannot check in an already completed appointment.',
-            ], 422);
-        }
-
-        $appointment = DB::transaction(function () use ($appointment) {
-            if (! $appointment->token_number) {
-                $date = $appointment->scheduled_at->toDateString();
-                $maxToken = Appointment::where('doctor_id', $appointment->doctor_id)
-                    ->whereDate('scheduled_at', $date)
-                    ->lockForUpdate()
-                    ->max('token_number') ?? 0;
-
-                $appointment->token_number = $maxToken + 1;
-            }
-
-            $appointment->status = Appointment::STATUS_CHECKED_IN;
-            $appointment->save();
-
-            return $appointment;
-        });
+        $appointment->checkIn();
 
         $appointment->load([
             'patient:id,mrn,first_name,last_name,phone,gender,date_of_birth,blood_group',
@@ -160,9 +133,11 @@ class OpdQueueController extends Controller
                 return response()->json(['message' => 'Appointment is already completed.'], 422);
             }
         } else {
+            $today = Carbon::now('Asia/Kolkata')->format('Y-m-d');
+
             // Find next waiting patient for this doctor today
             $appointment = Appointment::where('doctor_id', $user->id)
-                ->whereDate('scheduled_at', Carbon::today())
+                ->whereDate('scheduled_at', $today)
                 ->where('status', Appointment::STATUS_CHECKED_IN)
                 ->orderByRaw("CASE WHEN token_number IS NULL THEN 1 ELSE 0 END, token_number ASC")
                 ->orderBy('scheduled_at', 'asc')
@@ -171,7 +146,7 @@ class OpdQueueController extends Controller
             if (! $appointment) {
                 // Fallback to scheduled if none checked in yet
                 $appointment = Appointment::where('doctor_id', $user->id)
-                    ->whereDate('scheduled_at', Carbon::today())
+                    ->whereDate('scheduled_at', $today)
                     ->where('status', Appointment::STATUS_SCHEDULED)
                     ->orderBy('scheduled_at', 'asc')
                     ->first();

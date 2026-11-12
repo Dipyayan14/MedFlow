@@ -270,9 +270,12 @@ class AppointmentModuleTest extends TestCase
 
     public function test_check_in_rules(): void
     {
+        $today = Carbon::now('Asia/Kolkata')->format('Y-m-d');
+
         $appt = Appointment::factory()->create([
             'patient_id' => $this->patient->id,
             'doctor_id' => $this->doctorA->id,
+            'scheduled_at' => "{$today} 11:30:00",
             'status' => Appointment::STATUS_SCHEDULED,
             'created_by' => $this->dutyDesk->id,
         ]);
@@ -281,16 +284,18 @@ class AppointmentModuleTest extends TestCase
         $this->actingAs($this->nurse, 'sanctum')
             ->putJson("/api/appointments/{$appt->id}", ['status' => Appointment::STATUS_CHECKED_IN])
             ->assertStatus(200)
-            ->assertJsonPath('appointment.status', Appointment::STATUS_CHECKED_IN);
+            ->assertJsonPath('appointment.status', Appointment::STATUS_CHECKED_IN)
+            ->assertJsonPath('appointment.token_number', 1);
 
         // Reset
-        $appt->update(['status' => Appointment::STATUS_SCHEDULED]);
+        $appt->update(['status' => Appointment::STATUS_SCHEDULED, 'token_number' => null]);
 
         // Duty desk can check in
         $this->actingAs($this->dutyDesk, 'sanctum')
             ->putJson("/api/appointments/{$appt->id}", ['status' => Appointment::STATUS_CHECKED_IN])
             ->assertStatus(200)
-            ->assertJsonPath('appointment.status', Appointment::STATUS_CHECKED_IN);
+            ->assertJsonPath('appointment.status', Appointment::STATUS_CHECKED_IN)
+            ->assertJsonPath('appointment.token_number', 1);
     }
 
     public function test_consultation_status_and_notes_restricted_to_assigned_doctor_only(): void

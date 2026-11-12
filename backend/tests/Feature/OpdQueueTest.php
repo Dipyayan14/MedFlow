@@ -55,7 +55,7 @@ class OpdQueueTest extends TestCase
 
     public function test_opd_queue_orders_by_status_and_time(): void
     {
-        $today = Carbon::today()->toDateString();
+        $today = Carbon::now('Asia/Kolkata')->format('Y-m-d');
 
         // 1. Scheduled at 11:00
         $apptScheduled = Appointment::factory()->create([
@@ -138,10 +138,68 @@ class OpdQueueTest extends TestCase
         $this->actingAs($this->admin, 'sanctum')->getJson('/api/opd/queue')->assertStatus(200);
     }
 
+    public function test_all_three_check_in_paths_issue_server_generated_token_and_status(): void
+    {
+        $today = Carbon::now('Asia/Kolkata')->format('Y-m-d');
+
+        $appt1 = Appointment::factory()->create([
+            'patient_id' => $this->patientA->id,
+            'doctor_id' => $this->doctorA->id,
+            'scheduled_at' => "{$today} 09:30:00",
+            'status' => Appointment::STATUS_SCHEDULED,
+            'token_number' => null,
+            'created_by' => $this->dutyDesk->id,
+        ]);
+
+        $appt2 = Appointment::factory()->create([
+            'patient_id' => $this->patientB->id,
+            'doctor_id' => $this->doctorA->id,
+            'scheduled_at' => "{$today} 10:00:00",
+            'status' => Appointment::STATUS_SCHEDULED,
+            'token_number' => null,
+            'created_by' => $this->dutyDesk->id,
+        ]);
+
+        $appt3 = Appointment::factory()->create([
+            'patient_id' => $this->patientA->id,
+            'doctor_id' => $this->doctorA->id,
+            'scheduled_at' => "{$today} 10:30:00",
+            'status' => Appointment::STATUS_SCHEDULED,
+            'token_number' => null,
+            'created_by' => $this->dutyDesk->id,
+        ]);
+
+        // Path 1: POST /api/opd/check-in (duty_desk) -> token 1
+        $res1 = $this->actingAs($this->dutyDesk, 'sanctum')
+            ->postJson('/api/opd/check-in', ['appointment_id' => $appt1->id])
+            ->assertStatus(200)
+            ->assertJsonPath('token_number', 1)
+            ->assertJsonPath('appointment.status', Appointment::STATUS_CHECKED_IN);
+        $this->assertEquals(1, $appt1->fresh()->token_number);
+        $this->assertEquals(Appointment::STATUS_CHECKED_IN, $appt1->fresh()->status);
+
+        // Path 2: POST /api/appointments/{id}/check-in (nurse) -> token 2
+        $res2 = $this->actingAs($this->nurse, 'sanctum')
+            ->postJson("/api/appointments/{$appt2->id}/check-in")
+            ->assertStatus(200)
+            ->assertJsonPath('token_number', 2)
+            ->assertJsonPath('appointment.status', Appointment::STATUS_CHECKED_IN);
+        $this->assertEquals(2, $appt2->fresh()->token_number);
+        $this->assertEquals(Appointment::STATUS_CHECKED_IN, $appt2->fresh()->status);
+
+        // Path 3: PATCH /api/appointments/{id} with status->checked_in (admin) -> token 3
+        $res3 = $this->actingAs($this->admin, 'sanctum')
+            ->patchJson("/api/appointments/{$appt3->id}", ['status' => Appointment::STATUS_CHECKED_IN])
+            ->assertStatus(200)
+            ->assertJsonPath('appointment.token_number', 3)
+            ->assertJsonPath('appointment.status', Appointment::STATUS_CHECKED_IN);
+        $this->assertEquals(3, $appt3->fresh()->token_number);
+        $this->assertEquals(Appointment::STATUS_CHECKED_IN, $appt3->fresh()->status);
+    }
+
     public function test_token_numbering_is_sequential_per_doctor_per_day(): void
     {
-        $today = Carbon::today()->toDateString();
-        $tomorrow = Carbon::tomorrow()->toDateString();
+        $today = Carbon::now('Asia/Kolkata')->format('Y-m-d');
 
         // 2 appointments for Doctor A today
         $apptA1 = Appointment::factory()->create([
@@ -172,46 +230,68 @@ class OpdQueueTest extends TestCase
             'created_by' => $this->dutyDesk->id,
         ]);
 
-        // 1 appointment for Doctor A tomorrow
-        $apptA3Tomorrow = Appointment::factory()->create([
-            'patient_id' => $this->patientA->id,
-            'doctor_id' => $this->doctorA->id,
-            'scheduled_at' => "{$tomorrow} 09:30:00",
-            'status' => Appointment::STATUS_SCHEDULED,
-            'token_number' => null,
-            'created_by' => $this->dutyDesk->id,
-        ]);
-
         // Check in Doctor A appt 1 -> token 1
-        $resA1 = $this->actingAs($this->dutyDesk, 'sanctum')
+        $this->actingAs($this->dutyDesk, 'sanctum')
             ->postJson('/api/opd/check-in', ['appointment_id' => $apptA1->id])
-            ->assertStatus(200)
-            ->assertJsonPath('token_number', 1)
-            ->assertJsonPath('appointment.status', Appointment::STATUS_CHECKED_IN);
-
-        // Check in Doctor A appt 2 -> token 2
-        $resA2 = $this->actingAs($this->nurse, 'sanctum')
-            ->postJson("/api/appointments/{$apptA2->id}/check-in")
-            ->assertStatus(200)
-            ->assertJsonPath('token_number', 2)
-            ->assertJsonPath('appointment.status', Appointment::STATUS_CHECKED_IN);
-
-        // Check in Doctor B appt 1 today -> token 1 (independent of Doctor A)
-        $resB1 = $this->actingAs($this->admin, 'sanctum')
-            ->postJson('/api/opd/check-in', ['appointment_id' => $apptB1->id])
             ->assertStatus(200)
             ->assertJsonPath('token_number', 1);
 
-        // Check in Doctor A appt tomorrow -> token 1 (independent of today's count)
-        $resA3 = $this->actingAs($this->dutyDesk, 'sanctum')
-            ->postJson('/api/opd/check-in', ['appointment_id' => $apptA3Tomorrow->id])
+        // Check in Doctor A appt 2 -> token 2
+        $this->actingAs($this->nurse, 'sanctum')
+            ->postJson("/api/appointments/{$apptA2->id}/check-in")
+            ->assertStatus(200)
+            ->assertJsonPath('token_number', 2);
+
+        // Check in Doctor B appt 1 today -> token 1 (independent of Doctor A)
+        $this->actingAs($this->admin, 'sanctum')
+            ->postJson('/api/opd/check-in', ['appointment_id' => $apptB1->id])
             ->assertStatus(200)
             ->assertJsonPath('token_number', 1);
     }
 
+    public function test_check_in_is_refused_with_422_unless_scheduled_at_is_today_in_asia_kolkata(): void
+    {
+        $tomorrowKolkata = Carbon::now('Asia/Kolkata')->addDays(1)->format('Y-m-d');
+        $yesterdayKolkata = Carbon::now('Asia/Kolkata')->subDays(1)->format('Y-m-d');
+
+        $apptTomorrow = Appointment::factory()->create([
+            'patient_id' => $this->patientA->id,
+            'doctor_id' => $this->doctorA->id,
+            'scheduled_at' => "{$tomorrowKolkata} 10:00:00",
+            'status' => Appointment::STATUS_SCHEDULED,
+            'created_by' => $this->dutyDesk->id,
+        ]);
+
+        $apptYesterday = Appointment::factory()->create([
+            'patient_id' => $this->patientA->id,
+            'doctor_id' => $this->doctorA->id,
+            'scheduled_at' => "{$yesterdayKolkata} 10:00:00",
+            'status' => Appointment::STATUS_SCHEDULED,
+            'created_by' => $this->dutyDesk->id,
+        ]);
+
+        // Path 1 fails for tomorrow
+        $this->actingAs($this->dutyDesk, 'sanctum')
+            ->postJson('/api/opd/check-in', ['appointment_id' => $apptTomorrow->id])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['appointment']);
+
+        // Path 2 fails for yesterday
+        $this->actingAs($this->nurse, 'sanctum')
+            ->postJson("/api/appointments/{$apptYesterday->id}/check-in")
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['appointment']);
+
+        // Path 3 (PATCH update) fails for tomorrow
+        $this->actingAs($this->dutyDesk, 'sanctum')
+            ->patchJson("/api/appointments/{$apptTomorrow->id}", ['status' => Appointment::STATUS_CHECKED_IN])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['appointment']);
+    }
+
     public function test_check_in_role_rules_and_invalid_state_rejection(): void
     {
-        $today = Carbon::today()->toDateString();
+        $today = Carbon::now('Asia/Kolkata')->format('Y-m-d');
 
         $appt = Appointment::factory()->create([
             'patient_id' => $this->patientA->id,
@@ -253,7 +333,7 @@ class OpdQueueTest extends TestCase
 
     public function test_call_next_role_rules_and_automatic_queue_selection(): void
     {
-        $today = Carbon::today()->toDateString();
+        $today = Carbon::now('Asia/Kolkata')->format('Y-m-d');
 
         $appt1 = Appointment::factory()->create([
             'patient_id' => $this->patientA->id,
@@ -306,7 +386,7 @@ class OpdQueueTest extends TestCase
 
     public function test_status_order_rule_cannot_complete_before_in_consultation(): void
     {
-        $today = Carbon::today()->toDateString();
+        $today = Carbon::now('Asia/Kolkata')->format('Y-m-d');
 
         $appt = Appointment::factory()->create([
             'patient_id' => $this->patientA->id,
@@ -356,7 +436,7 @@ class OpdQueueTest extends TestCase
 
     public function test_notes_field_sanitized_in_opd_queue(): void
     {
-        $today = Carbon::today()->toDateString();
+        $today = Carbon::now('Asia/Kolkata')->format('Y-m-d');
 
         $appt = Appointment::factory()->create([
             'patient_id' => $this->patientA->id,

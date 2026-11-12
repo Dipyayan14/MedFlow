@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Database\Factories\AppointmentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class Appointment extends Model
 {
@@ -75,6 +78,55 @@ class Appointment extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Check in an appointment and issue a server-generated token number.
+     * Enforces date must be today in Asia/Kolkata timezone.
+     * Enforces appointment cannot be cancelled or completed.
+     *
+     * @throws ValidationException
+     */
+    public function checkIn(): self
+    {
+        $timezone = 'Asia/Kolkata';
+        $today = Carbon::now($timezone)->toDateString();
+        $appointmentDate = Carbon::parse($this->scheduled_at)->setTimezone($timezone)->toDateString();
+
+        if ($appointmentDate !== $today) {
+            throw ValidationException::withMessages([
+                'appointment' => 'Cannot check in an appointment that is not scheduled for today (Asia/Kolkata).',
+            ]);
+        }
+
+        if ($this->status === self::STATUS_CANCELLED) {
+            throw ValidationException::withMessages([
+                'status' => 'Cannot check in a cancelled appointment.',
+            ]);
+        }
+
+        if ($this->status === self::STATUS_COMPLETED) {
+            throw ValidationException::withMessages([
+                'status' => 'Cannot check in an already completed appointment.',
+            ]);
+        }
+
+        return DB::transaction(function () {
+            if (! $this->token_number) {
+                $date = $this->scheduled_at->toDateString();
+                $maxToken = self::where('doctor_id', $this->doctor_id)
+                    ->whereDate('scheduled_at', $date)
+                    ->lockForUpdate()
+                    ->max('token_number') ?? 0;
+
+                $this->token_number = $maxToken + 1;
+            }
+
+            $this->status = self::STATUS_CHECKED_IN;
+            $this->save();
+
+            return $this;
+        });
     }
 
     /**

@@ -21,6 +21,14 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
+    // Doctors listing for appointment booking
+    Route::get('/doctors', function () {
+        return response()->json([
+            'data' => \App\Models\User::where('role', 'doctor')
+                ->get(['id', 'name', 'department', 'specialization']),
+        ]);
+    })->middleware('role:doctor,nurse,duty_desk,admin');
+
     // Patients module
     // View: doctor, nurse, duty_desk, admin
     Route::get('/patients', [PatientController::class, 'index'])

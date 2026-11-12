@@ -106,15 +106,14 @@ class AppointmentController extends Controller
     {
         $validated = $request->validated();
 
-        if (isset($validated['status']) && $validated['status'] === Appointment::STATUS_CHECKED_IN && is_null($appointment->token_number)) {
-            $date = $appointment->scheduled_at->toDateString();
-            $maxToken = Appointment::where('doctor_id', $appointment->doctor_id)
-                ->whereDate('scheduled_at', $date)
-                ->max('token_number') ?? 0;
-            $validated['token_number'] = $maxToken + 1;
+        if (isset($validated['status']) && $validated['status'] === Appointment::STATUS_CHECKED_IN) {
+            $appointment->checkIn();
+            unset($validated['status']);
         }
 
-        $appointment->update($validated);
+        if (! empty($validated)) {
+            $appointment->update($validated);
+        }
 
         $appointment->load([
             'patient:id,mrn,first_name,last_name,phone,gender,date_of_birth,blood_group',
