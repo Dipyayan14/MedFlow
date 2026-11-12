@@ -106,6 +106,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = false);
 
     if (result['token'] != null) {
+      if (!mounted) return;
       // Registration worked! Save the user into shared app state.
       final state = MedFlowScope.of(context);
       final user = LoggedInUser.fromJson(result['user']);
@@ -414,7 +415,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<String>(
-                          value: _selectedRole,
+                          initialValue: _selectedRole,
                           icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.primary),
                           dropdownColor: AppColors.surfaceContainerLowest,
                           borderRadius: BorderRadius.circular(12),

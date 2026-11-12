@@ -657,7 +657,7 @@ class _RoleSelectorScreenState extends State<RoleSelectorScreen> {
                                     }
                                     widget.onLoginSuccess();
                                   } else {
-                                    if (mounted) {
+                                    if (context.mounted) {
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
                                           content: Text(result['message'] ?? 'Login failed'),

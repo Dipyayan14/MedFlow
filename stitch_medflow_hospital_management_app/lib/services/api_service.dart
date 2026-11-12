@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../core/config/app_config.dart';
 import '../features/patients/models/patient.dart';
+import '../features/booking/models/appointment.dart';
 
 class ApiService {
   static String get baseUrl => AppConfig.apiBaseUrl;
@@ -297,6 +298,226 @@ class ApiService {
     if (response.statusCode != 200) {
       final body = jsonDecode(response.body);
       throw Exception(body['message'] ?? 'Failed to delete patient (${response.statusCode})');
+    }
+  }
+
+  // --- Helpers ---
+  static String _extractErrorMessage(dynamic body, int statusCode) {
+    if (body is Map<String, dynamic>) {
+      if (body.containsKey('errors') && body['errors'] is Map) {
+        final errors = body['errors'] as Map<String, dynamic>;
+        final messages = <String>[];
+        errors.forEach((key, val) {
+          if (val is List) {
+            messages.addAll(val.map((e) => e.toString()));
+          } else if (val != null) {
+            messages.add(val.toString());
+          }
+        });
+        if (messages.isNotEmpty) {
+          return messages.join('\n');
+        }
+      }
+      if (body.containsKey('message') && body['message'] is String) {
+        return body['message'];
+      }
+    }
+    return 'Server error ($statusCode)';
+  }
+
+  // --- Doctors & Appointments & OPD Queue ---
+
+  static Future<List<DoctorInfo>> getDoctors({required String token}) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/doctors'),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      final list = body['data'] as List<dynamic>? ?? [];
+      return list.map((e) => DoctorInfo.fromJson(e as Map<String, dynamic>)).toList();
+    } else {
+      final body = jsonDecode(response.body);
+      throw Exception(_extractErrorMessage(body, response.statusCode));
+    }
+  }
+
+  static Future<OpdQueueData> getOpdQueue({
+    required String token,
+    String? date,
+    int? doctorId,
+  }) async {
+    final queryParams = <String, String>{};
+    if (date != null && date.isNotEmpty) queryParams['date'] = date;
+    if (doctorId != null) queryParams['doctor_id'] = doctorId.toString();
+
+    final uri = Uri.parse('$baseUrl/opd/queue').replace(queryParameters: queryParams);
+    final response = await http.get(
+      uri,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return OpdQueueData.fromJson(body);
+    } else {
+      final body = jsonDecode(response.body);
+      throw Exception(_extractErrorMessage(body, response.statusCode));
+    }
+  }
+
+  static Future<List<Appointment>> getAppointments({
+    required String token,
+    String? date,
+    int? doctorId,
+    int? patientId,
+    String? status,
+  }) async {
+    final queryParams = <String, String>{};
+    if (date != null && date.isNotEmpty) queryParams['date'] = date;
+    if (doctorId != null) queryParams['doctor_id'] = doctorId.toString();
+    if (patientId != null) queryParams['patient_id'] = patientId.toString();
+    if (status != null && status.isNotEmpty) queryParams['status'] = status;
+
+    final uri = Uri.parse('$baseUrl/appointments').replace(queryParameters: queryParams);
+    final response = await http.get(
+      uri,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      final list = (body['data'] as List<dynamic>?)
+              ?.map((e) => Appointment.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [];
+      return list;
+    } else {
+      final body = jsonDecode(response.body);
+      throw Exception(_extractErrorMessage(body, response.statusCode));
+    }
+  }
+
+  static Future<Appointment> bookAppointment({
+    required String token,
+    required int patientId,
+    required int doctorId,
+    required String scheduledAt,
+    String? reason,
+  }) async {
+    final payload = <String, dynamic>{
+      'patient_id': patientId,
+      'doctor_id': doctorId,
+      'scheduled_at': scheduledAt,
+    };
+    if (reason != null && reason.trim().isNotEmpty) {
+      payload['reason'] = reason.trim();
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/appointments'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(payload),
+    );
+
+    final body = jsonDecode(response.body);
+    if (response.statusCode == 201) {
+      return Appointment.fromJson(body['appointment']);
+    } else {
+      throw Exception(_extractErrorMessage(body, response.statusCode));
+    }
+  }
+
+  static Future<Appointment> checkInPatient({
+    required String token,
+    required int appointmentId,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/opd/check-in'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'appointment_id': appointmentId}),
+    );
+
+    final body = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      return Appointment.fromJson(body['appointment']);
+    } else {
+      throw Exception(_extractErrorMessage(body, response.statusCode));
+    }
+  }
+
+  static Future<Appointment> callNextPatient({
+    required String token,
+    int? appointmentId,
+  }) async {
+    final payload = <String, dynamic>{};
+    if (appointmentId != null) {
+      payload['appointment_id'] = appointmentId;
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/opd/call-next'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(payload),
+    );
+
+    final body = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      return Appointment.fromJson(body['appointment']);
+    } else {
+      throw Exception(_extractErrorMessage(body, response.statusCode));
+    }
+  }
+
+  static Future<Appointment> completeConsultation({
+    required String token,
+    required int appointmentId,
+    String? notes,
+  }) async {
+    final payload = <String, dynamic>{
+      'appointment_id': appointmentId,
+    };
+    if (notes != null && notes.trim().isNotEmpty) {
+      payload['notes'] = notes.trim();
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/opd/complete'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(payload),
+    );
+
+    final body = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      return Appointment.fromJson(body['appointment']);
+    } else {
+      throw Exception(_extractErrorMessage(body, response.statusCode));
     }
   }
 }

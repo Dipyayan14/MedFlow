@@ -38,6 +38,7 @@ class _MedFlowNavigationShellState extends State<MedFlowNavigationShell> {
       case 'duty_desk':
         return [1, 3, 4];
       case 'nurse':
+        return [1, 3, 4];
       case 'staff':
       default:
         return [3, 4];
@@ -71,7 +72,7 @@ class _MedFlowNavigationShellState extends State<MedFlowNavigationShell> {
                   break;
                 case 'nurse':
                   state.setActiveRole(UserRole.nurse);
-                  _currentIndex = 3;
+                  _currentIndex = 1;
                   break;
                 case 'staff':
                 default:
@@ -127,7 +128,7 @@ class _MedFlowNavigationShellState extends State<MedFlowNavigationShell> {
                 break;
               case 'nurse':
                 state.setActiveRole(UserRole.nurse);
-                _currentIndex = 3;
+                _currentIndex = 1;
                 break;
               case 'staff':
               default:
@@ -172,9 +173,10 @@ class _MedFlowNavigationShellState extends State<MedFlowNavigationShell> {
             label: 'OPD Queue',
           );
         case 1:
-          return const NavigationDestination(
-            icon: Icon(Icons.badge_outlined),
-            label: 'Reception',
+          final isNurse = state.currentUser?.role == 'nurse';
+          return NavigationDestination(
+            icon: Icon(isNurse ? Icons.schedule_outlined : Icons.badge_outlined),
+            label: isNurse ? 'OPD Queue' : 'Reception',
           );
         case 2:
           return const NavigationDestination(

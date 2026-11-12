@@ -37,6 +37,10 @@ class _ReceptionistDashboardScreenState extends State<ReceptionistDashboardScree
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchPatients();
+      final state = MedFlowScope.of(context);
+      if (state.authToken != null) {
+        state.fetchOpdQueueFromApi();
+      }
     });
   }
 
@@ -88,6 +92,10 @@ class _ReceptionistDashboardScreenState extends State<ReceptionistDashboardScree
   @override
   Widget build(BuildContext context) {
     final state = MedFlowScope.of(context);
+    final userRole = state.currentUser?.role;
+    final isNurse = userRole == 'nurse';
+    final canBook = !isNurse && (userRole == 'duty_desk' || userRole == 'admin');
+
     final physicians = state.physicians.where((p) {
       final matchesFilter = _selectedSpecialization == 'All' || p.specialization == _selectedSpecialization;
       final query = _searchController.text.trim().toLowerCase();
@@ -120,32 +128,40 @@ class _ReceptionistDashboardScreenState extends State<ReceptionistDashboardScree
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                'DESK 02',
-                                style: AppTypography.labelSm.copyWith(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w800,
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  isNurse ? 'TRIAGE 01' : 'DESK 02',
+                                  style: AppTypography.labelSm.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w800,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Central Wing Reception & Triage',
-                              style: AppTypography.bodySm.copyWith(
-                                color: AppColors.onSurfaceVariant,
-                                fontWeight: FontWeight.w600,
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  isNurse
+                                      ? 'Nursing Station & Live OPD Queue'
+                                      : 'Central Wing Reception & Triage',
+                                  style: AppTypography.bodySm.copyWith(
+                                    color: AppColors.onSurfaceVariant,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         Row(
                           children: [
                             Container(
@@ -226,36 +242,42 @@ class _ReceptionistDashboardScreenState extends State<ReceptionistDashboardScree
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.people_alt_outlined, size: 20, color: AppColors.primary),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Patients Directory',
-                                  style: AppTypography.headlineSm.copyWith(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.onSurface,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    '$_totalPatientsCount Records',
-                                    style: AppTypography.labelSm.copyWith(
-                                      color: AppColors.primary,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 11,
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.people_alt_outlined, size: 20, color: AppColors.primary),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      'Patients Directory',
+                                      style: AppTypography.headlineSm.copyWith(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.onSurface,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      '$_totalPatientsCount Records',
+                                      style: AppTypography.labelSm.copyWith(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
+                            const SizedBox(width: 6),
                             Row(
                               children: [
                                 TextButton.icon(
@@ -354,11 +376,13 @@ class _ReceptionistDashboardScreenState extends State<ReceptionistDashboardScree
                               children: [
                                 const Icon(Icons.info_outline, size: 16, color: AppColors.tertiary),
                                 const SizedBox(width: 8),
-                                Text(
-                                  'No patients registered in the hospital database yet.',
-                                  style: AppTypography.bodySm.copyWith(
-                                    color: AppColors.onSurfaceVariant,
-                                    fontSize: 12,
+                                Expanded(
+                                  child: Text(
+                                    'No patients registered in the hospital database yet.',
+                                    style: AppTypography.bodySm.copyWith(
+                                      color: AppColors.onSurfaceVariant,
+                                      fontSize: 12,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -534,77 +558,349 @@ class _ReceptionistDashboardScreenState extends State<ReceptionistDashboardScree
                     ),
                   ),
 
-                  const SizedBox(height: 16),
+                  // Fast Track Quick OPD Action Banner (Only visible to duty_desk and admin)
+                  if (canBook) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [AppColors.primary, AppColors.primaryContainer],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: AppTheme.cardShadow,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.receipt_long, color: AppColors.secondaryFixed, size: 16),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'FAST TRACK DESK',
+                                      style: AppTypography.labelSm.copyWith(
+                                        color: AppColors.secondaryFixed,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Quick OPD Registration & Token',
+                                  style: AppTypography.headlineSm.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Issue real-time physical or digital slip',
+                                  style: AppTypography.bodySm.copyWith(
+                                    color: AppColors.primaryFixedDim,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton(
+                            onPressed: widget.onBookAppointment,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: AppColors.primary,
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              elevation: 2,
+                            ),
+                            child: const Row(
+                              children: [
+                                Text('Book Slot', style: TextStyle(fontWeight: FontWeight.w700)),
+                                SizedBox(width: 4),
+                                Icon(Icons.arrow_forward, size: 16),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
 
-                  // Fast Track Quick OPD Action Banner
+                  const SizedBox(height: 18),
+
+                  // Real-Time OPD Queue & Live Token List Card
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [AppColors.primary, AppColors.primaryContainer],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: AppColors.surfaceContainerLowest,
                       borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.borderSubtle),
                       boxShadow: AppTheme.cardShadow,
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Row(
                                 children: [
-                                  const Icon(Icons.receipt_long, color: AppColors.secondaryFixed, size: 16),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'FAST TRACK DESK',
-                                    style: AppTypography.labelSm.copyWith(
-                                      color: AppColors.secondaryFixed,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: 0.5,
+                                  const Icon(Icons.confirmation_number_outlined, size: 20, color: AppColors.primary),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      "Today's OPD Queue & Tokens",
+                                      style: AppTypography.headlineSm.copyWith(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.onSurface,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'Quick OPD Registration & Token',
-                                style: AppTypography.headlineSm.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
+                            ),
+                            const SizedBox(width: 6),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    '${state.opdAppointments.length} Tokens',
+                                    style: AppTypography.labelSm.copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Issue real-time physical or digital slip',
-                                style: AppTypography.bodySm.copyWith(
-                                  color: AppColors.primaryFixedDim,
+                                const SizedBox(width: 4),
+                                IconButton(
+                                  icon: const Icon(Icons.refresh, size: 18, color: AppColors.primary),
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                  tooltip: 'Refresh Queue',
+                                  onPressed: () => state.fetchOpdQueueFromApi(),
                                 ),
+                              ],
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // Loading State
+                        if (state.isLoadingOpd)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 14),
+                            child: Center(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                                  SizedBox(width: 10),
+                                  Text('Syncing live token queue...', style: TextStyle(fontSize: 12)),
+                                ],
                               ),
-                            ],
+                            ),
+                          )
+                        // Error State with Retry
+                        else if (state.opdError != null)
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.errorCrimson.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.error_outline, size: 16, color: AppColors.errorCrimson),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    state.opdError!,
+                                    style: const TextStyle(fontSize: 11, color: AppColors.errorCrimson),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () => state.fetchOpdQueueFromApi(),
+                                  style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero),
+                                  child: const Text('Retry', style: TextStyle(fontSize: 11)),
+                                ),
+                              ],
+                            ),
+                          )
+                        // Empty State
+                        else if (state.opdAppointments.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.inbox_outlined, size: 20, color: AppColors.tertiary),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'No OPD tokens or appointments scheduled for today.',
+                                    style: AppTypography.bodySm.copyWith(
+                                      color: AppColors.onSurfaceVariant,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        // Loaded Queue Items
+                        else
+                          ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: state.opdAppointments.length,
+                            separatorBuilder: (context, index) => const Divider(height: 16, color: AppColors.surfaceContainer),
+                            itemBuilder: (context, index) {
+                              final appt = state.opdAppointments[index];
+                              final timeStr =
+                                  '${appt.scheduledAt.hour.toString().padLeft(2, '0')}:${appt.scheduledAt.minute.toString().padLeft(2, '0')}';
+
+                              Color statusColor;
+                              String statusLabel;
+                              if (appt.isInConsultation) {
+                                statusColor = AppColors.secondaryEmerald;
+                                statusLabel = 'IN CLINIC';
+                              } else if (appt.isCheckedIn) {
+                                statusColor = AppColors.primary;
+                                statusLabel = 'WAITING';
+                              } else if (appt.isCompleted) {
+                                statusColor = AppColors.outline;
+                                statusLabel = 'COMPLETED';
+                              } else {
+                                statusColor = AppColors.amberWarning;
+                                statusLabel = 'SCHEDULED';
+                              }
+
+                              return Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    width: 44,
+                                    padding: const EdgeInsets.symmetric(vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: appt.isInConsultation
+                                          ? AppColors.primary
+                                          : (appt.tokenNumber != null
+                                              ? AppColors.primaryContainer.withValues(alpha: 0.4)
+                                              : AppColors.surfaceContainerLow),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        appt.tokenNumber != null ? '#${appt.tokenNumber}' : timeStr,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                          color: appt.isInConsultation
+                                              ? Colors.white
+                                              : (appt.tokenNumber != null ? AppColors.primary : AppColors.onSurfaceVariant),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Flexible(
+                                              child: Text(
+                                                appt.patientName,
+                                                style: AppTypography.labelMd.copyWith(fontWeight: FontWeight.bold),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                              decoration: BoxDecoration(
+                                                color: statusColor.withValues(alpha: 0.12),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: Text(
+                                                statusLabel,
+                                                style: TextStyle(
+                                                  color: statusColor,
+                                                  fontSize: 9,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Text(
+                                          '${appt.doctorDisplayName} • ${appt.patientMrn}',
+                                          style: AppTypography.bodySm.copyWith(
+                                            fontSize: 10,
+                                            color: AppColors.onSurfaceVariant,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (appt.isScheduled) ...[
+                                    const SizedBox(width: 8),
+                                    ElevatedButton(
+                                      onPressed: () async {
+                                        try {
+                                          final updated = await state.checkInAppointment(appt.id);
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                backgroundColor: AppColors.secondaryEmerald,
+                                                content: Text(
+                                                  'Patient ${updated.patientName} checked in. Token #${updated.tokenNumber} issued.',
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        } catch (e) {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                backgroundColor: AppColors.errorCrimson,
+                                                content: Text(e.toString().replaceFirst('Exception: ', '')),
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.primary,
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                        minimumSize: Size.zero,
+                                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      ),
+                                      child: const Text('Check In', style: TextStyle(fontSize: 11)),
+                                    ),
+                                  ],
+                                ],
+                              );
+                            },
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        ElevatedButton(
-                          onPressed: widget.onBookAppointment,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: AppColors.primary,
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            elevation: 2,
-                          ),
-                          child: const Row(
-                            children: [
-                              Text('Book Slot', style: TextStyle(fontWeight: FontWeight.w700)),
-                              SizedBox(width: 4),
-                              Icon(Icons.arrow_forward, size: 16),
-                            ],
-                          ),
-                        ),
                       ],
                     ),
                   ),
@@ -615,26 +911,32 @@ class _ReceptionistDashboardScreenState extends State<ReceptionistDashboardScree
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Text(
-                            'Physicians on Duty',
-                            style: AppTypography.headlineSm.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.onSurface,
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                'Physicians on Duty',
+                                style: AppTypography.headlineSm.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.onSurface,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 6),
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              color: AppColors.secondaryEmerald,
-                              shape: BoxShape.circle,
+                            const SizedBox(width: 6),
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: AppColors.secondaryEmerald,
+                                shape: BoxShape.circle,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Text(
                         '${physicians.length} Available in Wing',
                         style: AppTypography.labelSm.copyWith(color: AppColors.tertiary),
@@ -763,19 +1065,21 @@ class _ReceptionistDashboardScreenState extends State<ReceptionistDashboardScree
                                         );
                                       },
                                     ),
-                                    const SizedBox(width: 4),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        _showQuickTokenDialog(context, doc);
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppColors.primary,
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                        minimumSize: Size.zero,
-                                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    if (canBook) ...[
+                                      const SizedBox(width: 4),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          _showQuickTokenDialog(context, doc);
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppColors.primary,
+                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                          minimumSize: Size.zero,
+                                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                        ),
+                                        child: const Text('Issue Token', style: TextStyle(fontSize: 12)),
                                       ),
-                                      child: const Text('Issue Token', style: TextStyle(fontSize: 12)),
-                                    ),
+                                    ],
                                   ],
                                 ),
                               ],

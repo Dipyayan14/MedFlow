@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../features/patients/models/patient.dart';
+import '../../features/booking/models/appointment.dart';
 
 enum UserRole {
   receptionist('Receptionist', 'Front Desk & Triage', Icons.badge_outlined),
@@ -279,6 +280,123 @@ class MedFlowState extends ChangeNotifier {
   ];
 
   List<PatientToken> get queue => List.unmodifiable(_queue);
+
+  // --- Real API OPD Queue ---
+  bool _isLoadingOpd = false;
+  bool get isLoadingOpd => _isLoadingOpd;
+
+  String? _opdError;
+  String? get opdError => _opdError;
+
+  OpdQueueData? _opdQueueData;
+  OpdQueueData? get opdQueueData => _opdQueueData;
+
+  List<Appointment> _opdAppointments = [];
+  List<Appointment> get opdAppointments => List.unmodifiable(_opdAppointments);
+
+  Appointment? get currentInConsultation =>
+      _opdAppointments.cast<Appointment?>().firstWhere(
+            (a) => a?.isInConsultation == true,
+            orElse: () => null,
+          );
+
+  List<Appointment> get waitingAppointments =>
+      _opdAppointments.where((a) => a.isCheckedIn).toList();
+
+  List<Appointment> get scheduledAppointments =>
+      _opdAppointments.where((a) => a.isScheduled).toList();
+
+  List<Appointment> get completedAppointments =>
+      _opdAppointments.where((a) => a.isCompleted).toList();
+
+  Future<void> fetchOpdQueueFromApi({String? date, int? doctorId}) async {
+    final token = _authToken;
+    if (token == null) return;
+
+    _isLoadingOpd = true;
+    _opdError = null;
+    notifyListeners();
+
+    try {
+      final res = await ApiService.getOpdQueue(
+        token: token,
+        date: date,
+        doctorId: doctorId,
+      );
+      _opdQueueData = res;
+      _opdAppointments = res.queue;
+      _tokensDoneToday = res.counts['completed'] ?? 0;
+
+      // Also sync _queue
+      _queue.clear();
+      for (int i = 0; i < _opdAppointments.length; i++) {
+        final a = _opdAppointments[i];
+        final timeStr =
+            '${a.scheduledAt.hour.toString().padLeft(2, '0')}:${a.scheduledAt.minute.toString().padLeft(2, '0')}';
+        _queue.add(
+          PatientToken(
+            tokenNumber: a.tokenNumber ?? (i + 1),
+            name: a.patientName,
+            age: a.patientAge > 0 ? a.patientAge : 45,
+            gender: a.patientGender.isNotEmpty ? a.patientGender : 'Adult',
+            uhid: a.patientMrn,
+            complaint: a.reason ?? 'General Consultation & Health Review',
+            waitingLocation: a.isInConsultation
+                ? 'Consultation Room 204'
+                : (a.isCheckedIn
+                    ? 'Waiting in Bay ${(i % 3) + 1}B'
+                    : 'Scheduled Slot: $timeStr'),
+            arrivalTime: timeStr,
+            isInClinic: a.isInConsultation,
+          ),
+        );
+      }
+
+      _isLoadingOpd = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoadingOpd = false;
+      _opdError = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+    }
+  }
+
+  Future<Appointment> checkInAppointment(int appointmentId) async {
+    final token = _authToken;
+    if (token == null) throw Exception('Not authenticated');
+
+    final updated = await ApiService.checkInPatient(
+      token: token,
+      appointmentId: appointmentId,
+    );
+    await fetchOpdQueueFromApi();
+    return updated;
+  }
+
+  Future<Appointment> callNextPatient({int? appointmentId}) async {
+    final token = _authToken;
+    if (token == null) throw Exception('Not authenticated');
+
+    final updated = await ApiService.callNextPatient(
+      token: token,
+      appointmentId: appointmentId,
+    );
+    await fetchOpdQueueFromApi();
+    return updated;
+  }
+
+  Future<Appointment> completeAppointment(int appointmentId, {String? notes}) async {
+    final token = _authToken;
+    if (token == null) throw Exception('Not authenticated');
+
+    final updated = await ApiService.completeConsultation(
+      token: token,
+      appointmentId: appointmentId,
+      notes: notes,
+    );
+    await fetchOpdQueueFromApi();
+    return updated;
+  }
 
   bool _isLoadingPatients = false;
   bool get isLoadingPatients => _isLoadingPatients;
